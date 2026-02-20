@@ -159,18 +159,38 @@ if st.session_state.index:
             st.warning(f"⚠️ Knowledge Gaps: {', '.join(set(st.session_state.student_stats['weak_topics']))}")
 
     # 2. MULTI-AGENT CHAT
-    with tab2:
-        st.subheader("Verified Biotech Tutor")
-        if q := st.chat_input("Ask a technical question..."):
-            st.chat_message("user").write(q)
-            context = "\n".join(retrieve(q))
-            with st.status("Agentic Reasoning In Progress...") as status:
-                st.write("Tutor drafting response...")
-                draft = call_gemini_safe(f"Explain this biotech concept: {q}\nContext: {context}")
-                st.write("Scientific Critic verifying accuracy...")
-                verified = call_gemini_safe(f"Scientific Critic: Correct this draft using ONLY the context: {draft}\nContext: {context}")
-                status.update(label="Response Verified", state="complete")
-                st.chat_message("assistant").write(verified)
+    # 2. MULTI-AGENT CHAT (Fixed for Persistence)
+with tab2:
+    st.subheader("Verified Biotech Tutor")
+    
+    # Initialize chat history if it doesn't exist
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    # Display previous messages from history
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    if q := st.chat_input("Ask a technical question..."):
+        # Add user message to history
+        st.session_state.messages.append({"role": "user", "content": q})
+        with st.chat_message("user"):
+            st.markdown(q)
+            
+        context = "\n".join(retrieve(q))
+        
+        with st.status("Agentic Reasoning In Progress...") as status:
+            st.write("Tutor drafting response...")
+            draft = call_gemini_safe(f"Explain this biotech concept: {q}\nContext: {context}")
+            st.write("Scientific Critic verifying accuracy...")
+            verified = call_gemini_safe(f"Scientific Critic: Correct errors in this draft using ONLY the context: {draft}\nContext: {context}")
+            status.update(label="Response Verified", state="complete")
+            
+            # Display and SAVE the verified response to history
+            with st.chat_message("assistant"):
+                st.markdown(verified)
+            st.session_state.messages.append({"role": "assistant", "content": verified})
 
     # 3. QUIZ (Fixed for Persistence)
     with tab3:
@@ -230,3 +250,4 @@ if st.session_state.index:
             st.markdown(st.session_state.last_scout)
 else:
     st.info("👈 Please upload a Biotech document in the sidebar to unlock the platform.")
+
