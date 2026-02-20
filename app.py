@@ -10,11 +10,17 @@ import sqlite3
 import streamlit_authenticator as stauth
 
 # ==========================================
-# 🔐 1. INITIALIZATION (MOVE TO TOP)
+# 🔐 1. INITIALIZATION & SESSION PERSISTENCE
 # ==========================================
 st.set_page_config(page_title="Bio-Step AI", page_icon="🧬", layout="wide")
 
-# Initialize models BEFORE login check so they exist in session_state
+# Persistent Storage for AI Outputs (Prevents Vanishing)
+if 'last_quiz' not in st.session_state: st.session_state.last_quiz = ""
+if 'last_sim' not in st.session_state: st.session_state.last_sim = ""
+if 'last_scout' not in st.session_state: st.session_state.last_scout = ""
+if 'last_vision' not in st.session_state: st.session_state.last_vision = ""
+
+# Neural Engine & Stats Initialization
 if 'embed_model' not in st.session_state:
     with st.spinner("Initializing Scientific Neural Engine..."):
         st.session_state.embed_model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -56,7 +62,6 @@ if not st.session_state.get("authentication_status"):
     col1, col2, col3 = st.columns([1, 1.2, 1]) 
     with col2:
         st.markdown("<h2 style='text-align: center; color: #818cf8;'>🧬 Bio-Step AI Portal</h2>", unsafe_allow_html=True)
-        # Login call fixed for v0.3.x
         authenticator.login(location='main')
         
         if st.session_state.get("authentication_status") == False:
@@ -167,12 +172,15 @@ if st.session_state.index:
                 status.update(label="Response Verified", state="complete")
                 st.chat_message("assistant").write(verified)
 
-    # 3. QUIZ
+    # 3. QUIZ (Fixed for Persistence)
     with tab3:
         st.subheader("Adaptive Assessment")
         if st.button("Generate Contextual Quiz"):
-            quiz = call_gemini_safe(f"Create a 5-question MCQ from: {st.session_state.chunks[:5]}")
-            st.write(quiz)
+            with st.spinner("Creating Quiz..."):
+                st.session_state.last_quiz = call_gemini_safe(f"Create a 5-question MCQ from: {st.session_state.chunks[:5]}")
+        
+        if st.session_state.last_quiz:
+            st.write(st.session_state.last_quiz)
             score = st.slider("Score (0-5)", 0, 5, 4)
             topic = st.text_input("Topic Tested")
             if st.button("Submit to Dashboard"):
@@ -180,37 +188,45 @@ if st.session_state.index:
                 st.session_state.student_stats['mastery'] = (score/5)*100
                 st.session_state.student_stats['progress'] = min(100, st.session_state.student_stats['progress'] + 10)
                 if score < 4: st.session_state.student_stats['weak_topics'].append(topic)
-                # Database Update
                 conn = sqlite3.connect('biostep_users.db')
                 c = conn.cursor()
                 c.execute("REPLACE INTO users VALUES (?, ?, ?, ?)", (username, name, st.session_state.student_stats['mastery'], st.session_state.student_stats['progress']))
                 conn.commit(); conn.close()
                 st.rerun()
 
-    # 4. VISION
+    # 4. VISION (Fixed for Persistence)
     with tab4:
         st.subheader("Lab-to-Logic Vision Agent")
         img_file = st.file_uploader("Upload Gel/Chart", type=['jpg','png','jpeg'])
         if img_file and st.button("Analyze Visual Data"):
             img = Image.open(img_file)
-            st.image(img, width='stretch') # Fixed width deprecation
-            res = call_gemini_safe("Analyze this biotech image and explain results.", is_vision=True, img=img)
-            st.info(res)
+            st.image(img, width='stretch')
+            with st.spinner("Analyzing Image..."):
+                st.session_state.last_vision = call_gemini_safe("Analyze this biotech image and explain results.", is_vision=True, img=img)
+        
+        if st.session_state.last_vision:
+            st.info(st.session_state.last_vision)
 
-    # 5. SIMULATION
+    # 5. SIMULATION (Fixed for Persistence)
     with tab5:
         st.subheader("Protocol logic Simulator")
         proto = st.text_input("Experiment Name (e.g. CRISPR In-Vitro)")
         if st.button("Simulate Outcome"):
-            sim = call_gemini_safe(f"Generate Python logic for this experiment based on notes: {proto}")
-            st.code(sim, language='python')
+            with st.spinner("Generating Simulation..."):
+                st.session_state.last_sim = call_gemini_safe(f"Generate Python logic for this experiment based on notes: {proto}")
+        
+        if st.session_state.last_sim:
+            st.code(st.session_state.last_sim, language='python')
 
-    # 6. RESEARCH
+    # 6. RESEARCH (Fixed for Persistence)
     with tab6:
         st.subheader("Research Scout")
         topic_scout = st.text_input("Search Latest Literature")
         if st.button("Scout bioRxiv/PubMed"):
-            res = call_gemini_safe(f"Find 3 hypothetical recent paper summaries about: {topic_scout}")
-            st.markdown(res)
+            with st.spinner("Searching Papers..."):
+                st.session_state.last_scout = call_gemini_safe(f"Find 3 hypothetical recent paper summaries about: {topic_scout}")
+        
+        if st.session_state.last_scout:
+            st.markdown(st.session_state.last_scout)
 else:
     st.info("👈 Please upload a Biotech document in the sidebar to unlock the platform.")
