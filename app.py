@@ -7,6 +7,46 @@ from PIL import Image
 from sentence_transformers import SentenceTransformer
 from google.api_core import exceptions
 
+import sqlite3
+import streamlit_authenticator as stauth
+
+# --- DATABASE SETUP ---
+def init_db():
+    conn = sqlite3.connect('biostep_users.db')
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS users 
+                 (username TEXT PRIMARY KEY, name TEXT, mastery REAL, progress INTEGER)''')
+    conn.commit()
+    conn.close()
+
+init_db()
+
+# --- AUTHENTICATION CONFIG ---
+# In a real app, these would be in your st.secrets
+names = ['Ragul P', 'Reena J','Pranathi P K','Rohith G']
+usernames = ['ragul', 'reena','pranathi','rohith']
+passwords = ['rag2007', 'reen2006','pran2007','rgm2006'] # These should be hashed in production
+
+authenticator = stauth.Authenticate(
+    {'usernames': {u: {'name': n, 'password': p} for u, n, p in zip(usernames, names, passwords)}},
+    'biostep_cookie', 'auth_key', cookie_expiry_days=30
+)
+
+# --- RENDER LOGIN ---
+name, authentication_status, username = authenticator.login('Login to Bio-Step AI', 'main')
+
+if authentication_status == False:
+    st.error('Username/password is incorrect')
+    st.stop()
+elif authentication_status == None:
+    st.warning('Please enter your username and password')
+    st.stop()
+
+# If authenticated, the rest of your app runs below...
+st.sidebar.title(f"Welcome, {name}!")
+if st.sidebar.button("Logout"):
+    authenticator.logout('Logout', 'sidebar')
+
 # ==========================================
 # 🔐 CONFIG & 3-KEY ROTATION LOGIC
 # ==========================================
@@ -250,5 +290,6 @@ if st.session_state.index:
             st.markdown(res)
 else:
     st.info("👈 Please upload a Biotech document in the sidebar to unlock the platform.")
+
 
 
