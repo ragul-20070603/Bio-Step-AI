@@ -12,6 +12,73 @@ from google.api_core import exceptions
 # ==========================================
 st.set_page_config(page_title="Bio-Step AI", page_icon="🧬", layout="wide")
 
+# --- CUSTOM CSS FOR PREMIUM LOOK ---
+st.markdown("""
+    <style>
+    /* Main Background and Font */
+    .stApp {
+        background-color: #f8faff;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    /* Sidebar Styling */
+    [data-testid="stSidebar"] {
+        background-color: #ffffff;
+        border-right: 1px solid #e0e6ed;
+    }
+    
+    /* Modern Card containers for Tabs */
+    .stTabs [data-baseweb="tab-panel"] {
+        background-color: #ffffff;
+        padding: 25px;
+        border-radius: 15px;
+        border: 1px solid #e0e6ed;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        margin-top: 15px;
+    }
+    
+    /* Tab Header Styling */
+    .stTabs [data-baseweb="tab"] {
+        height: 50px;
+        white-space: pre-wrap;
+        background-color: transparent;
+        border-radius: 5px;
+        color: #4b5563;
+        font-weight: 600;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background-color: #eef2ff !important;
+        color: #4f46e5 !important;
+    }
+    
+    /* Metric Card Styling */
+    [data-testid="stMetricValue"] {
+        color: #4f46e5;
+        font-weight: 700;
+    }
+    
+    /* Chat Input Styling */
+    .stChatInput {
+        border-radius: 10px;
+    }
+    
+    /* Custom Button */
+    .stButton>button {
+        border-radius: 8px;
+        border: none;
+        background-color: #4f46e5;
+        color: white;
+        transition: all 0.3s ease;
+    }
+    
+    .stButton>button:hover {
+        background-color: #4338ca;
+        transform: translateY(-1px);
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 def call_gemini_safe(prompt, is_vision=False, img=None):
     """Rotates through 3 API keys to ensure zero downtime."""
     api_keys = st.secrets.get("GEMINI_KEYS", [])
@@ -149,3 +216,4 @@ if st.session_state.index:
             st.markdown(res)
 else:
     st.info("👈 Please upload a Biotech document in the sidebar to unlock the platform.")
+
