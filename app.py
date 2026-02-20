@@ -30,23 +30,27 @@ names = ['Ragul P', 'Reena J', 'Pranathi P K', 'Rohith G']
 usernames = ['ragul', 'reena', 'pranathi', 'rohith']
 passwords = ['rag2007', 'reen2006', 'pran2007', 'rgm2006']
 
-# Note: In production, passwords must be hashed using stauth.Hasher(passwords).generate()
 authenticator = stauth.Authenticate(
     {'usernames': {u: {'name': n, 'password': p} for u, n, p in zip(usernames, names, passwords)}},
     'biostep_cookie', 'auth_key', cookie_expiry_days=30
 )
 
-# --- RENDER LOGIN (FIXED SYNTAX) ---
-# Argument 1 is now 'location'. Form name goes into the 'fields' dict.
-login_result = authenticator.login(location='main')
-
-# New versions return a tuple, but status is also in session_state
-if st.session_state["authentication_status"] == False:
-    st.error('Username/password is incorrect')
-    st.stop()
-elif st.session_state["authentication_status"] == None:
-    st.warning('Please enter your username and password')
-    st.stop()
+# --- RENDER CENTERED LOGIN ---
+if not st.session_state.get("authentication_status"):
+    st.write("#") # Vertical Spacers
+    st.write("#")
+    col1, col2, col3 = st.columns([1, 1.2, 1]) # Centering the login box
+    with col2:
+        st.markdown("<h2 style='text-align: center; color: #818cf8;'>🧬 Bio-Step AI Portal</h2>", unsafe_allow_html=True)
+        name, authentication_status, username = authenticator.login(location='main')
+        
+        if st.session_state["authentication_status"] == False:
+            st.error('Username/password is incorrect')
+        elif st.session_state["authentication_status"] == None:
+            st.info('Please enter your biotech credentials')
+    
+    if not st.session_state.get("authentication_status"):
+        st.stop()
 
 # --- IF AUTHENTICATED ---
 name = st.session_state["name"]
@@ -56,7 +60,7 @@ st.sidebar.title(f"Welcome, {name}!")
 authenticator.logout('Logout', 'sidebar')
 
 # ==========================================
-# 🎨 UI CUSTOMIZATION (DARK MODE)
+# 🎨 UI CUSTOMIZATION (PREMIUM DARK MODE)
 # ==========================================
 st.markdown("""
     <style>
@@ -87,7 +91,7 @@ def call_gemini_safe(prompt, is_vision=False, img=None):
             return response.text
         except (exceptions.ResourceExhausted, exceptions.Unauthenticated):
             continue
-    return "Error: All API keys exhausted."
+    return "Error: All API keys exhausted. Please check quota or rotation."
 
 if 'student_stats' not in st.session_state:
     st.session_state.student_stats = {"progress": 0, "mastery": 0.0, "quizzes": 0, "weak_topics": []}
@@ -145,9 +149,12 @@ if st.session_state.index:
         if q := st.chat_input("Ask a technical question..."):
             st.chat_message("user").write(q)
             context = "\n".join(retrieve(q))
-            with st.spinner("Drafting & Verifying..."):
+            with st.status("Agentic Reasoning In Progress...") as status:
+                st.write("Tutor drafting response...")
                 draft = call_gemini_safe(f"Explain this biotech concept: {q}\nContext: {context}")
+                st.write("Scientific Critic verifying accuracy...")
                 verified = call_gemini_safe(f"Scientific Critic: Correct this draft using ONLY the context: {draft}\nContext: {context}")
+                status.update(label="Response Verified", state="complete")
                 st.chat_message("assistant").write(verified)
 
     with tab3:
