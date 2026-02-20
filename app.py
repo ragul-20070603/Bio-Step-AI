@@ -10,11 +10,11 @@ import sqlite3
 import streamlit_authenticator as stauth
 
 # ==========================================
-# 🔐 INITIALIZATION (FIXES ATTRIBUTEERROR)
+# 🔐 1. INITIALIZATION (MOVE TO TOP)
 # ==========================================
 st.set_page_config(page_title="Bio-Step AI", page_icon="🧬", layout="wide")
 
-# Initialize models and stats IMMEDIATELY at startup
+# Initialize models BEFORE login check so they exist in session_state
 if 'embed_model' not in st.session_state:
     with st.spinner("Initializing Scientific Neural Engine..."):
         st.session_state.embed_model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -38,7 +38,7 @@ def init_db():
 init_db()
 
 # ==========================================
-# 🔑 AUTHENTICATION CONFIG
+# 🔑 2. AUTHENTICATION CONFIG
 # ==========================================
 names = ['Ragul P', 'Reena J', 'Pranathi P K', 'Rohith G']
 usernames = ['ragul', 'reena', 'pranathi', 'rohith']
@@ -56,7 +56,7 @@ if not st.session_state.get("authentication_status"):
     col1, col2, col3 = st.columns([1, 1.2, 1]) 
     with col2:
         st.markdown("<h2 style='text-align: center; color: #818cf8;'>🧬 Bio-Step AI Portal</h2>", unsafe_allow_html=True)
-        # Login call fixed for v0.3.x (no direct unpacking)
+        # Login call fixed for v0.3.x
         authenticator.login(location='main')
         
         if st.session_state.get("authentication_status") == False:
@@ -65,7 +65,7 @@ if not st.session_state.get("authentication_status"):
             st.info('Please enter your biotech credentials')
     
     if not st.session_state.get("authentication_status"):
-        st.stop()
+        st.stop() 
 
 # --- ACCESS USER DETAILS ---
 name = st.session_state["name"]
@@ -75,7 +75,7 @@ st.sidebar.title(f"Welcome, {name}!")
 authenticator.logout('Logout', 'sidebar')
 
 # ==========================================
-# 🎨 UI CUSTOMIZATION (DARK MODE)
+# 🎨 3. UI CUSTOMIZATION (DARK MODE)
 # ==========================================
 st.markdown("""
     <style>
@@ -91,7 +91,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # ==========================================
-# 🛠️ BACKEND UTILITIES
+# 🛠️ 4. BACKEND UTILITIES
 # ==========================================
 def call_gemini_safe(prompt, is_vision=False, img=None):
     api_keys = st.secrets.get("GEMINI_KEYS", [])
@@ -126,13 +126,13 @@ def retrieve(query, top_k=3):
     return [st.session_state.chunks[i] for i in I[0]]
 
 # ==========================================
-# 🚀 CORE APP FEATURES
+# 🚀 5. CORE APP FEATURES
 # ==========================================
 with st.sidebar:
     st.header("📂 Knowledge Ingestion")
     file = st.file_uploader("Upload Syllabus/Notes (PDF)", type="pdf")
     if file and st.button("Build AI Knowledge Base"):
-        with st.spinner("Indexing Biotech Data..."):
+        with st.spinner("Processing..."):
             text = extract_text(file)
             st.session_state.index, st.session_state.chunks = build_db(text)
             st.session_state.full_text = text
@@ -180,7 +180,7 @@ if st.session_state.index:
                 st.session_state.student_stats['mastery'] = (score/5)*100
                 st.session_state.student_stats['progress'] = min(100, st.session_state.student_stats['progress'] + 10)
                 if score < 4: st.session_state.student_stats['weak_topics'].append(topic)
-                # Persist to Database
+                # Database Update
                 conn = sqlite3.connect('biostep_users.db')
                 c = conn.cursor()
                 c.execute("REPLACE INTO users VALUES (?, ?, ?, ?)", (username, name, st.session_state.student_stats['mastery'], st.session_state.student_stats['progress']))
@@ -193,7 +193,7 @@ if st.session_state.index:
         img_file = st.file_uploader("Upload Gel/Chart", type=['jpg','png','jpeg'])
         if img_file and st.button("Analyze Visual Data"):
             img = Image.open(img_file)
-            st.image(img, use_container_width=True)
+            st.image(img, width='stretch') # Fixed width deprecation
             res = call_gemini_safe("Analyze this biotech image and explain results.", is_vision=True, img=img)
             st.info(res)
 
