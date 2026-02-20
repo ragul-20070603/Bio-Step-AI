@@ -37,22 +37,23 @@ authenticator = stauth.Authenticate(
 
 # --- RENDER CENTERED LOGIN ---
 if not st.session_state.get("authentication_status"):
-    st.write("#") # Vertical Spacers
+    st.write("#") 
     st.write("#")
-    col1, col2, col3 = st.columns([1, 1.2, 1]) # Centering the login box
+    col1, col2, col3 = st.columns([1, 1.2, 1]) 
     with col2:
         st.markdown("<h2 style='text-align: center; color: #818cf8;'>🧬 Bio-Step AI Portal</h2>", unsafe_allow_html=True)
-        name, authentication_status, username = authenticator.login(location='main')
+        # Login call updated for v0.3.x compatibility
+        authenticator.login(location='main')
         
-        if st.session_state["authentication_status"] == False:
+        if st.session_state.get("authentication_status") == False:
             st.error('Username/password is incorrect')
-        elif st.session_state["authentication_status"] == None:
+        elif st.session_state.get("authentication_status") is None:
             st.info('Please enter your biotech credentials')
     
     if not st.session_state.get("authentication_status"):
         st.stop()
 
-# --- IF AUTHENTICATED ---
+# --- ACCESS USER DETAILS ---
 name = st.session_state["name"]
 username = st.session_state["username"]
 
@@ -60,7 +61,7 @@ st.sidebar.title(f"Welcome, {name}!")
 authenticator.logout('Logout', 'sidebar')
 
 # ==========================================
-# 🎨 UI CUSTOMIZATION (PREMIUM DARK MODE)
+# 🎨 UI CUSTOMIZATION (DARK MODE)
 # ==========================================
 st.markdown("""
     <style>
@@ -91,7 +92,7 @@ def call_gemini_safe(prompt, is_vision=False, img=None):
             return response.text
         except (exceptions.ResourceExhausted, exceptions.Unauthenticated):
             continue
-    return "Error: All API keys exhausted. Please check quota or rotation."
+    return "Error: All API keys exhausted."
 
 if 'student_stats' not in st.session_state:
     st.session_state.student_stats = {"progress": 0, "mastery": 0.0, "quizzes": 0, "weak_topics": []}
@@ -134,6 +135,7 @@ if st.session_state.index:
     tabs = st.tabs(["📊 Dashboard", "💬 Tutor", "🧠 Quiz", "📸 Vision", "🧪 Simulation", "📚 Research"])
     tab1, tab2, tab3, tab4, tab5, tab6 = tabs
 
+    # 1. DASHBOARD
     with tab1:
         st.subheader("Personalized Learning Analytics")
         c1, c2, c3 = st.columns(3)
@@ -144,6 +146,7 @@ if st.session_state.index:
         if st.session_state.student_stats['weak_topics']:
             st.warning(f"⚠️ Knowledge Gaps: {', '.join(set(st.session_state.student_stats['weak_topics']))}")
 
+    # 2. MULTI-AGENT CHAT
     with tab2:
         st.subheader("Verified Biotech Tutor")
         if q := st.chat_input("Ask a technical question..."):
@@ -157,6 +160,7 @@ if st.session_state.index:
                 status.update(label="Response Verified", state="complete")
                 st.chat_message("assistant").write(verified)
 
+    # 3. QUIZ
     with tab3:
         st.subheader("Adaptive Assessment")
         if st.button("Generate Contextual Quiz"):
@@ -169,13 +173,14 @@ if st.session_state.index:
                 st.session_state.student_stats['mastery'] = (score/5)*100
                 st.session_state.student_stats['progress'] = min(100, st.session_state.student_stats['progress'] + 10)
                 if score < 4: st.session_state.student_stats['weak_topics'].append(topic)
-                # Database Update
+                # Persist to Database
                 conn = sqlite3.connect('biostep_users.db')
                 c = conn.cursor()
                 c.execute("REPLACE INTO users VALUES (?, ?, ?, ?)", (username, name, st.session_state.student_stats['mastery'], st.session_state.student_stats['progress']))
                 conn.commit(); conn.close()
                 st.rerun()
 
+    # 4. VISION
     with tab4:
         st.subheader("Lab-to-Logic Vision Agent")
         img_file = st.file_uploader("Upload Gel/Chart", type=['jpg','png','jpeg'])
@@ -185,6 +190,7 @@ if st.session_state.index:
             res = call_gemini_safe("Analyze this biotech image and explain results.", is_vision=True, img=img)
             st.info(res)
 
+    # 5. SIMULATION
     with tab5:
         st.subheader("Protocol logic Simulator")
         proto = st.text_input("Experiment Name (e.g. CRISPR In-Vitro)")
@@ -192,11 +198,12 @@ if st.session_state.index:
             sim = call_gemini_safe(f"Generate Python logic for this experiment based on notes: {proto}")
             st.code(sim, language='python')
 
+    # 6. RESEARCH
     with tab6:
         st.subheader("Research Scout")
-        topic = st.text_input("Search Latest Literature")
+        topic_scout = st.text_input("Search Latest Literature")
         if st.button("Scout bioRxiv/PubMed"):
-            res = call_gemini_safe(f"Find 3 hypothetical recent paper summaries about: {topic}")
+            res = call_gemini_safe(f"Find 3 hypothetical recent paper summaries about: {topic_scout}")
             st.markdown(res)
 else:
     st.info("👈 Please upload a Biotech document in the sidebar to unlock the platform.")
