@@ -10,9 +10,21 @@ import sqlite3
 import streamlit_authenticator as stauth
 
 # ==========================================
-# 🔐 CONFIG & AUTHENTICATION
+# 🔐 INITIALIZATION (FIXES ATTRIBUTEERROR)
 # ==========================================
 st.set_page_config(page_title="Bio-Step AI", page_icon="🧬", layout="wide")
+
+# Initialize models and stats IMMEDIATELY at startup
+if 'embed_model' not in st.session_state:
+    with st.spinner("Initializing Scientific Neural Engine..."):
+        st.session_state.embed_model = SentenceTransformer("all-MiniLM-L6-v2")
+
+if 'student_stats' not in st.session_state:
+    st.session_state.student_stats = {"progress": 0, "mastery": 0.0, "quizzes": 0, "weak_topics": []}
+
+if 'index' not in st.session_state:
+    st.session_state.index = None
+    st.session_state.chunks = []
 
 # --- DATABASE SETUP ---
 def init_db():
@@ -25,7 +37,9 @@ def init_db():
 
 init_db()
 
-# --- AUTHENTICATION CONFIG ---
+# ==========================================
+# 🔑 AUTHENTICATION CONFIG
+# ==========================================
 names = ['Ragul P', 'Reena J', 'Pranathi P K', 'Rohith G']
 usernames = ['ragul', 'reena', 'pranathi', 'rohith']
 passwords = ['rag2007', 'reen2006', 'pran2007', 'rgm2006']
@@ -42,7 +56,7 @@ if not st.session_state.get("authentication_status"):
     col1, col2, col3 = st.columns([1, 1.2, 1]) 
     with col2:
         st.markdown("<h2 style='text-align: center; color: #818cf8;'>🧬 Bio-Step AI Portal</h2>", unsafe_allow_html=True)
-        # Login call updated for v0.3.x compatibility
+        # Login call fixed for v0.3.x (no direct unpacking)
         authenticator.login(location='main')
         
         if st.session_state.get("authentication_status") == False:
@@ -77,7 +91,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # ==========================================
-# 🛠️ BACKEND UTILITIES & KEY ROTATION
+# 🛠️ BACKEND UTILITIES
 # ==========================================
 def call_gemini_safe(prompt, is_vision=False, img=None):
     api_keys = st.secrets.get("GEMINI_KEYS", [])
@@ -93,13 +107,6 @@ def call_gemini_safe(prompt, is_vision=False, img=None):
         except (exceptions.ResourceExhausted, exceptions.Unauthenticated):
             continue
     return "Error: All API keys exhausted."
-
-if 'student_stats' not in st.session_state:
-    st.session_state.student_stats = {"progress": 0, "mastery": 0.0, "quizzes": 0, "weak_topics": []}
-if 'index' not in st.session_state:
-    st.session_state.index = None
-    st.session_state.chunks = []
-    st.session_state.embed_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 def extract_text(file):
     reader = PyPDF2.PdfReader(file)
@@ -125,7 +132,7 @@ with st.sidebar:
     st.header("📂 Knowledge Ingestion")
     file = st.file_uploader("Upload Syllabus/Notes (PDF)", type="pdf")
     if file and st.button("Build AI Knowledge Base"):
-        with st.spinner("Processing..."):
+        with st.spinner("Indexing Biotech Data..."):
             text = extract_text(file)
             st.session_state.index, st.session_state.chunks = build_db(text)
             st.session_state.full_text = text
