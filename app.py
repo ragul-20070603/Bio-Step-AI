@@ -248,6 +248,7 @@ with tab2:
         
         if st.session_state.last_scout:
             st.markdown(st.session_state.last_scout)
-else:
-    st.info("👈 Please upload a Biotech document in the sidebar to unlock the platform.")
+        else:
+            st.info("👈 Please upload a Biotech document in the sidebar to unlock the platform.")
+
 
