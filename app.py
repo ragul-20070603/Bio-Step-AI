@@ -13,68 +13,102 @@ from google.api_core import exceptions
 st.set_page_config(page_title="Bio-Step AI", page_icon="🧬", layout="wide")
 
 # --- CUSTOM CSS FOR PREMIUM LOOK ---
+# --- CUSTOM CSS FOR DARK MODE PRE-FINALS ---
 st.markdown("""
     <style>
-    /* Main Background and Font */
+    /* Main Background and Core Text */
     .stApp {
-        background-color: #f8faff;
+        background-color: #0e1117;
+        color: #e0e6ed;
         font-family: 'Inter', sans-serif;
     }
     
     /* Sidebar Styling */
     [data-testid="stSidebar"] {
-        background-color: #ffffff;
-        border-right: 1px solid #e0e6ed;
+        background-color: #161b22;
+        border-right: 1px solid #30363d;
     }
     
-    /* Modern Card containers for Tabs */
+    /* Sidebar Text */
+    [data-testid="stSidebar"] .stMarkdown p {
+        color: #c9d1d9;
+    }
+
+    /* Tab Panels as Dark Cards */
     .stTabs [data-baseweb="tab-panel"] {
-        background-color: #ffffff;
+        background-color: #161b22;
         padding: 25px;
         border-radius: 15px;
-        border: 1px solid #e0e6ed;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        border: 1px solid #30363d;
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
         margin-top: 15px;
     }
     
     /* Tab Header Styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 10px;
+    }
+
     .stTabs [data-baseweb="tab"] {
         height: 50px;
-        white-space: pre-wrap;
-        background-color: transparent;
-        border-radius: 5px;
-        color: #4b5563;
-        font-weight: 600;
-    }
-    
-    .stTabs [aria-selected="true"] {
-        background-color: #eef2ff !important;
-        color: #4f46e5 !important;
-    }
-    
-    /* Metric Card Styling */
-    [data-testid="stMetricValue"] {
-        color: #4f46e5;
-        font-weight: 700;
-    }
-    
-    /* Chat Input Styling */
-    .stChatInput {
-        border-radius: 10px;
-    }
-    
-    /* Custom Button */
-    .stButton>button {
+        background-color: #1f2937;
         border-radius: 8px;
+        color: #9ca3af;
+        font-weight: 600;
+        padding: 0 20px;
+    }
+    
+    /* Active Tab Highlight */
+    .stTabs [aria-selected="true"] {
+        background-color: #4f46e5 !important;
+        color: #ffffff !important;
+        border-bottom: 2px solid #818cf8 !important;
+    }
+    
+    /* Neon Metric Styling */
+    [data-testid="stMetricValue"] {
+        color: #818cf8; /* Soft Neon Indigo */
+        font-weight: 800;
+    }
+    
+    [data-testid="stMetricLabel"] {
+        color: #9ca3af;
+    }
+
+    /* Chat Messages and Input */
+    .stChatMessage {
+        background-color: #0d1117;
+        border-radius: 10px;
+        border: 1px solid #30363d;
+    }
+
+    /* Input Field Background */
+    .stChatInput textarea {
+        background-color: #1f2937 !important;
+        color: #ffffff !important;
+    }
+    
+    /* Vivid Action Button */
+    .stButton>button {
+        border-radius: 10px;
         border: none;
-        background-color: #4f46e5;
+        background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
         color: white;
-        transition: all 0.3s ease;
+        font-weight: bold;
+        padding: 0.6rem 2rem;
     }
     
     .stButton>button:hover {
-        background-color: #4338ca;
-        transform: translateY(-1px);
+        opacity: 0.9;
+        transform: scale(1.02);
+        color: white;
+    }
+
+    /* Success/Warning Overrides for Dark Mode */
+    .stAlert {
+        background-color: #1f2937;
+        color: #ffffff;
+        border: 1px solid #30363d;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -216,4 +250,5 @@ if st.session_state.index:
             st.markdown(res)
 else:
     st.info("👈 Please upload a Biotech document in the sidebar to unlock the platform.")
+
 
