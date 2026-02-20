@@ -85,7 +85,7 @@ if st.session_state.index:
         user_query = st.chat_input("Ask a question about the document...")
         if user_query:
             context = "\n\n".join(retrieve(user_query))
-            model = genai.GenerativeModel("gemini-1.5-flash")
+            model = genai.GenerativeModel("gemini-2.5-flash")
             
             # Agent Loop
             with st.spinner("Tutor drafting... Critic verifying..."):
@@ -96,7 +96,7 @@ if st.session_state.index:
     with tab3:
         st.subheader("Adaptive Quiz")
         if st.button("Generate Quiz"):
-            model = genai.GenerativeModel("gemini-1.5-flash")
+            model = genai.GenerativeModel("gemini-2.5-flash")
             context = "\n\n".join(retrieve("key definitions and facts", top_k=5))
             quiz = model.generate_content(f"Create a 5-question MCQ quiz based on:\n{context}").text
             st.write(quiz)
@@ -108,4 +108,5 @@ if st.session_state.index:
                 st.session_state.student_stats['average_score'] = (score/5)*100
                 st.success("Dashboard Updated!")
 else:
+
     st.info("Please upload a document to unlock the learning modules.")
