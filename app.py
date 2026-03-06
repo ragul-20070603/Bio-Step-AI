@@ -82,16 +82,81 @@ authenticator.logout('Logout', 'sidebar')
 # ==========================================
 # 🎨 3. UI CUSTOMIZATION (DARK MODE)
 # ==========================================
+# ==========================================
+# 🎨 3. UI CUSTOMIZATION (FIXED TEXT VISIBILITY)
+# ==========================================
 st.markdown("""
     <style>
-    .stApp { background-color: #0e1117; color: #e0e6ed; font-family: 'Inter', sans-serif; }
-    [data-testid="stSidebar"] { background-color: #161b22; border-right: 1px solid #30363d; }
-    .stTabs [data-baseweb="tab-panel"] { background-color: #161b22; padding: 25px; border-radius: 15px; border: 1px solid #30363d; box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3); margin-top: 15px; }
-    .stTabs [data-baseweb="tab"] { height: 50px; background-color: #1f2937; border-radius: 8px; color: #9ca3af; font-weight: 600; padding: 0 20px; }
-    .stTabs [aria-selected="true"] { background-color: #4f46e5 !important; color: #ffffff !important; border-bottom: 2px solid #818cf8 !important; }
+    /* Main Background and Core Text */
+    .stApp { 
+        background-color: #0e1117; 
+        color: #e0e6ed; 
+        font-family: 'Inter', sans-serif; 
+    }
+    
+    /* Sidebar Styling */
+    [data-testid="stSidebar"] { 
+        background-color: #161b22; 
+        border-right: 1px solid #30363d; 
+    }
+    
+    /* FIX: Force AI Chat Text to be Bright White */
+    .stChatMessage {
+        background-color: #1c2128 !important; /* Slightly lighter than background */
+        border: 1px solid #30363d !important;
+        color: #ffffff !important;
+        border-radius: 10px;
+        margin-bottom: 10px;
+    }
+
+    /* Target all text inside chat bubbles */
+    .stChatMessage [data-testid="stMarkdownContainer"] p {
+        color: #ffffff !important;
+        font-size: 1.05rem;
+    }
+
+    /* Tab Styling */
+    .stTabs [data-baseweb="tab-panel"] { 
+        background-color: #161b22; 
+        padding: 25px; 
+        border-radius: 15px; 
+        border: 1px solid #30363d; 
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3); 
+        margin-top: 15px; 
+    }
+    
+    .stTabs [data-baseweb="tab"] { 
+        height: 50px; 
+        background-color: #1f2937; 
+        border-radius: 8px; 
+        color: #9ca3af; 
+        font-weight: 600; 
+        padding: 0 20px; 
+    }
+    
+    .stTabs [aria-selected="true"] { 
+        background-color: #4f46e5 !important; 
+        color: #ffffff !important; 
+        border-bottom: 2px solid #818cf8 !important; 
+    }
+    
+    /* Metric and Button Styling */
     [data-testid="stMetricValue"] { color: #818cf8; font-weight: 800; }
-    .stButton>button { border-radius: 10px; border: none; background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%); color: white; font-weight: bold; padding: 0.6rem 2rem; }
-    .stButton>button:hover { opacity: 0.9; transform: scale(1.02); color: white; }
+    
+    .stButton>button { 
+        border-radius: 10px; 
+        border: none; 
+        background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%); 
+        color: white; 
+        font-weight: bold; 
+        padding: 0.6rem 2rem; 
+    }
+    
+    .stButton>button:hover { 
+        opacity: 0.9; 
+        transform: scale(1.02); 
+        color: white; 
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -250,6 +315,7 @@ if st.session_state.index:
             st.markdown(st.session_state.last_scout)
         else:
             st.info("👈 Please upload a Biotech document in the sidebar to unlock the platform.")
+
 
 
 
