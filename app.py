@@ -114,13 +114,32 @@ else: # DARK MODE (Deep Space Pro)
             border: 1px solid #30363d; border-radius: 24px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); padding: 32px;
         }
-        .stTabs [data-baseweb="tab"] { background-color: #21262d; border-radius: 12px; color: #8b949e; font-weight: 500; padding: 10px 24px; }
-        .stTabs [aria-selected="true"] { background: linear-gradient(135deg, #4f46e5, #7c3aed) !important; color: #fff !important; }
-        .stChatMessage { background-color: #1c2128 !important; border: 1px solid #30363d !important; color: #ffffff !important; border-radius: 12px; }
-        .stChatMessage [data-testid="stMarkdownContainer"] p { color: #ffffff !important; font-size: 1.05rem; }
-        .stButton>button { width: 100%; border-radius: 12px; height: 50px; background: linear-gradient(90deg, #4f46e5, #7c3aed); border: none; font-weight: 700; color: white; }
-        </style>
-        """, unsafe_allow_html=True)
+       /* Enhanced Tab Spacing and Professional Padding */
+        .stTabs [data-baseweb="tab-list"] { 
+            gap: 24px; /* Increases space between the tabs */
+            padding-bottom: 10px;
+        }
+        
+        .stTabs [data-baseweb="tab"] { 
+            background-color: #21262d; 
+            border-radius: 12px; 
+            color: #8b949e; 
+            font-weight: 500; 
+            padding: 12px 28px; /* Adds internal padding to make buttons look bigger */
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .stTabs [data-baseweb="tab"]:hover {
+            border-color: #30363d;
+            background-color: #30363d;
+        }
+
+        .stTabs [aria-selected="true"] { 
+            background: linear-gradient(135deg, #4f46e5, #7c3aed) !important; 
+            color: #fff !important; 
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        }
 
 # ==========================================
 # 🛠️ 4. BACKEND UTILITIES
@@ -249,3 +268,4 @@ if st.session_state.index:
         if st.session_state.last_scout: st.markdown(st.session_state.last_scout)
 else:
     st.info("👈 Please upload a Biotech document in the sidebar to unlock the platform.")
+
