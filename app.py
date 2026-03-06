@@ -14,11 +14,12 @@ import streamlit_authenticator as stauth
 # ==========================================
 st.set_page_config(page_title="Bio-Step AI", page_icon="🧬", layout="wide")
 
-# Persistent Storage for AI Outputs
+# Persistent Storage for AI Outputs to prevent vanishing
 if 'last_quiz' not in st.session_state: st.session_state.last_quiz = ""
 if 'last_sim' not in st.session_state: st.session_state.last_sim = ""
 if 'last_scout' not in st.session_state: st.session_state.last_scout = ""
 if 'last_vision' not in st.session_state: st.session_state.last_vision = ""
+if 'messages' not in st.session_state: st.session_state.messages = []
 
 # Neural Engine & Stats Initialization
 if 'embed_model' not in st.session_state:
@@ -80,37 +81,44 @@ username = st.session_state["username"]
 with st.sidebar:
     st.title(f"Welcome, {name}!")
     theme = st.toggle("☀️ Light Mode", value=False)
+    st.write("---")
     authenticator.logout('Logout', 'sidebar')
 
 # ==========================================
-# 🎨 3. DYNAMIC UI CUSTOMIZATION
+# 🎨 3. INDUSTRY-GRADE UI CUSTOMIZATION
 # ==========================================
-if theme: # LIGHT MODE
+if theme: # LIGHT MODE (Enterprise White)
     st.markdown("""
         <style>
-        .stApp { background-color: #f8faff; color: #1e293b; font-family: 'Inter', sans-serif; }
-        [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; }
-        .stTabs [data-baseweb="tab-panel"] { background-color: #ffffff; padding: 25px; border-radius: 15px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); margin-top: 15px; }
-        .stTabs [data-baseweb="tab"] { height: 50px; background-color: #f1f5f9; border-radius: 8px; color: #64748b; font-weight: 600; }
+        .stApp { background-color: #fdfdfd; color: #1e293b; font-family: 'Inter', system-ui, sans-serif; }
+        [data-testid="stSidebar"] { background-color: #f8fafc; border-right: 1px solid #e2e8f0; }
+        .stTabs [data-baseweb="tab-panel"] { 
+            background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px);
+            border: 1px solid rgba(226, 232, 240, 0.5); border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07); padding: 30px;
+        }
+        .stTabs [data-baseweb="tab"] { font-size: 14px; color: #64748b; }
         .stTabs [aria-selected="true"] { background-color: #4f46e5 !important; color: #ffffff !important; }
-        [data-testid="stMetricValue"] { color: #4f46e5; font-weight: 800; }
-        .stChatMessage { background-color: #ffffff !important; border: 1px solid #e2e8f0 !important; color: #1e293b !important; }
+        .stChatMessage { background-color: #ffffff !important; border: 1px solid #e2e8f0 !important; color: #1e293b !important; border-radius: 12px; }
         .stChatMessage [data-testid="stMarkdownContainer"] p { color: #1e293b !important; }
-        .stButton>button { border-radius: 10px; background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%); color: white; }
+        .stButton>button { width: 100%; border-radius: 12px; height: 50px; background: #4f46e5; border: none; font-weight: 600; color: white; }
         </style>
         """, unsafe_allow_html=True)
-else: # DARK MODE
+else: # DARK MODE (Deep Space Pro)
     st.markdown("""
         <style>
-        .stApp { background-color: #0e1117; color: #e0e6ed; font-family: 'Inter', sans-serif; }
-        [data-testid="stSidebar"] { background-color: #161b22; border-right: 1px solid #30363d; }
-        .stTabs [data-baseweb="tab-panel"] { background-color: #161b22; padding: 25px; border-radius: 15px; border: 1px solid #30363d; box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3); margin-top: 15px; }
-        .stTabs [data-baseweb="tab"] { height: 50px; background-color: #1f2937; border-radius: 8px; color: #9ca3af; font-weight: 600; }
-        .stTabs [aria-selected="true"] { background-color: #4f46e5 !important; color: #ffffff !important; border-bottom: 2px solid #818cf8 !important; }
-        [data-testid="stMetricValue"] { color: #818cf8; font-weight: 800; }
-        .stChatMessage { background-color: #1c2128 !important; border: 1px solid #30363d !important; color: #ffffff !important; }
+        .stApp { background: radial-gradient(circle at top right, #111827, #010409); color: #f9fafb; font-family: 'Inter', system-ui, sans-serif; }
+        [data-testid="stSidebar"] { background-color: #0d1117; border-right: 1px solid #30363d; }
+        .stTabs [data-baseweb="tab-panel"] { 
+            background: rgba(22, 27, 34, 0.7); backdrop-filter: blur(12px);
+            border: 1px solid #30363d; border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); padding: 32px;
+        }
+        .stTabs [data-baseweb="tab"] { background-color: #21262d; border-radius: 12px; color: #8b949e; font-weight: 500; padding: 10px 24px; }
+        .stTabs [aria-selected="true"] { background: linear-gradient(135deg, #4f46e5, #7c3aed) !important; color: #fff !important; }
+        .stChatMessage { background-color: #1c2128 !important; border: 1px solid #30363d !important; color: #ffffff !important; border-radius: 12px; }
         .stChatMessage [data-testid="stMarkdownContainer"] p { color: #ffffff !important; font-size: 1.05rem; }
-        .stButton>button { border-radius: 10px; background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%); color: white; }
+        .stButton>button { width: 100%; border-radius: 12px; height: 50px; background: linear-gradient(90deg, #4f46e5, #7c3aed); border: none; font-weight: 700; color: white; }
         </style>
         """, unsafe_allow_html=True)
 
@@ -177,30 +185,28 @@ if st.session_state.index:
         if st.session_state.student_stats['weak_topics']:
             st.warning(f"⚠️ Knowledge Gaps: {', '.join(set(st.session_state.student_stats['weak_topics']))}")
 
-    # 2. MULTI-AGENT CHAT (With Conversion History)
+    # 2. MULTI-AGENT CHAT
     with tab2:
         st.subheader("Verified Biotech Tutor")
-        if "messages" not in st.session_state: st.session_state.messages = []
         for msg in st.session_state.messages:
             with st.chat_message(msg["role"]): st.markdown(msg["content"])
-
         if q := st.chat_input("Ask a technical question..."):
             st.session_state.messages.append({"role": "user", "content": q})
             with st.chat_message("user"): st.markdown(q)
             context = "\n".join(retrieve(q))
-            with st.status("Agentic Reasoning...") as status:
-                draft = call_gemini_safe(f"Explain this biotech concept: {q}\nContext: {context}")
-                verified = call_gemini_safe(f"Scientific Critic: Correct this draft using ONLY the context: {draft}\nContext: {context}")
+            with st.status("Agentic Verification...") as status:
+                draft = call_gemini_safe(f"Explain: {q}\nContext: {context}")
+                verified = call_gemini_safe(f"Critic: Fix errors in draft based ONLY on context: {draft}\nContext: {context}")
                 status.update(label="Response Verified", state="complete")
                 with st.chat_message("assistant"): st.markdown(verified)
                 st.session_state.messages.append({"role": "assistant", "content": verified})
 
-    # 3. QUIZ (Fixed for Persistence)
+    # 3. QUIZ
     with tab3:
         st.subheader("Adaptive Assessment")
         if st.button("Generate Contextual Quiz"):
-            with st.spinner("Creating Quiz..."):
-                st.session_state.last_quiz = call_gemini_safe(f"Create a 5-question MCQ from: {st.session_state.chunks[:5]}")
+            with st.spinner("Creating..."):
+                st.session_state.last_quiz = call_gemini_safe(f"Create a 5 MCQ quiz from: {st.session_state.chunks[:5]}")
         if st.session_state.last_quiz:
             st.write(st.session_state.last_quiz)
             score = st.slider("Score (0-5)", 0, 5, 4)
@@ -214,31 +220,31 @@ if st.session_state.index:
                 c = conn.cursor(); c.execute("REPLACE INTO users VALUES (?, ?, ?, ?)", (username, name, st.session_state.student_stats['mastery'], st.session_state.student_stats['progress']))
                 conn.commit(); conn.close(); st.rerun()
 
-    # 4. VISION (Fixed for Persistence)
+    # 4. VISION
     with tab4:
         st.subheader("Lab-to-Logic Vision Agent")
-        img_file = st.file_uploader("Upload Gel/Chart", type=['jpg','png','jpeg'])
+        img_file = st.file_uploader("Upload Lab Visuals", type=['jpg','png','jpeg'])
         if img_file and st.button("Analyze Visual Data"):
             img = Image.open(img_file); st.image(img, width='stretch')
             with st.spinner("Analyzing..."):
-                st.session_state.last_vision = call_gemini_safe("Analyze this biotech image.", is_vision=True, img=img)
+                st.session_state.last_vision = call_gemini_safe("Analyze this biotech image technical findings.", is_vision=True, img=img)
         if st.session_state.last_vision: st.info(st.session_state.last_vision)
 
-    # 5. SIMULATION (Fixed for Persistence)
+    # 5. SIMULATION
     with tab5:
-        st.subheader("Protocol logic Simulator")
+        st.subheader("Protocol Logic Simulator")
         proto = st.text_input("Experiment Name")
         if st.button("Simulate Outcome"):
-            with st.spinner("Generating..."):
-                st.session_state.last_sim = call_gemini_safe(f"Generate Python logic for: {proto}")
+            with st.spinner("Running Logic..."):
+                st.session_state.last_sim = call_gemini_safe(f"Generate Python logic for protocol: {proto}")
         if st.session_state.last_sim: st.code(st.session_state.last_sim, language='python')
 
-    # 6. RESEARCH (Fixed for Persistence)
+    # 6. RESEARCH
     with tab6:
         st.subheader("Research Scout")
         topic_scout = st.text_input("Search Latest Literature")
         if st.button("Scout bioRxiv/PubMed"):
-            with st.spinner("Searching..."):
+            with st.spinner("Scouting..."):
                 st.session_state.last_scout = call_gemini_safe(f"Find 3 paper summaries about: {topic_scout}")
         if st.session_state.last_scout: st.markdown(st.session_state.last_scout)
 else:
