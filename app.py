@@ -14,14 +14,14 @@ import streamlit_authenticator as stauth
 # ==========================================
 st.set_page_config(page_title="Bio-Step AI", page_icon="🧬", layout="wide")
 
-# Persistent Storage for AI Outputs to prevent vanishing
+# Persistent Storage
 if 'last_quiz' not in st.session_state: st.session_state.last_quiz = ""
 if 'last_sim' not in st.session_state: st.session_state.last_sim = ""
 if 'last_scout' not in st.session_state: st.session_state.last_scout = ""
 if 'last_vision' not in st.session_state: st.session_state.last_vision = ""
 if 'messages' not in st.session_state: st.session_state.messages = []
 
-# Neural Engine & Stats Initialization
+# Neural Engine Initialization
 if 'embed_model' not in st.session_state:
     with st.spinner("Initializing Scientific Neural Engine..."):
         st.session_state.embed_model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -87,75 +87,55 @@ with st.sidebar:
 # ==========================================
 # 🎨 3. INDUSTRY-GRADE UI CUSTOMIZATION
 # ==========================================
-if theme: # LIGHT MODE (Enterprise White)
+if theme: # LIGHT MODE
     st.markdown("""
         <style>
-        .stApp { background-color: #fdfdfd; color: #1e293b; font-family: 'Inter', system-ui, sans-serif; }
+        .stApp { background-color: #fdfdfd; color: #1e293b; font-family: 'Inter', sans-serif; }
         [data-testid="stSidebar"] { background-color: #f8fafc; border-right: 1px solid #e2e8f0; }
         .stTabs [data-baseweb="tab-panel"] { 
-            background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px);
-            border: 1px solid rgba(226, 232, 240, 0.5); border-radius: 20px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07); padding: 30px;
+            background: rgba(255, 255, 255, 0.8); border: 1px solid #e2e8f0; border-radius: 20px; padding: 30px;
         }
-        .stTabs [data-baseweb="tab"] { font-size: 14px; color: #64748b; }
         .stTabs [aria-selected="true"] { background-color: #4f46e5 !important; color: #ffffff !important; }
-        .stChatMessage { background-color: #ffffff !important; border: 1px solid #e2e8f0 !important; color: #1e293b !important; border-radius: 12px; }
-        .stChatMessage [data-testid="stMarkdownContainer"] p { color: #1e293b !important; }
-        .stButton>button { width: 100%; border-radius: 12px; height: 50px; background: #4f46e5; border: none; font-weight: 600; color: white; }
         </style>
         """, unsafe_allow_html=True)
-else: # DARK MODE (Deep Space Pro)
+else: # DARK MODE
     st.markdown("""
         <style>
-        .stApp { background: radial-gradient(circle at top right, #111827, #010409); color: #f9fafb; font-family: 'Inter', system-ui, sans-serif; }
+        .stApp { background: radial-gradient(circle at top right, #111827, #010409); color: #f9fafb; font-family: 'Inter', sans-serif; }
         [data-testid="stSidebar"] { background-color: #0d1117; border-right: 1px solid #30363d; }
         .stTabs [data-baseweb="tab-panel"] { 
             background: rgba(22, 27, 34, 0.7); backdrop-filter: blur(12px);
-            border: 1px solid #30363d; border-radius: 24px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); padding: 32px;
+            border: 1px solid #30363d; border-radius: 24px; padding: 32px;
         }
-       /* Enhanced Tab Spacing and Professional Padding */
-        .stTabs [data-baseweb="tab-list"] { 
-            gap: 24px; /* Increases space between the tabs */
-            padding-bottom: 10px;
-        }
-        
+        .stTabs [data-baseweb="tab-list"] { gap: 24px; padding-bottom: 10px; }
         .stTabs [data-baseweb="tab"] { 
-            background-color: #21262d; 
-            border-radius: 12px; 
-            color: #8b949e; 
-            font-weight: 500; 
-            padding: 12px 28px; /* Adds internal padding to make buttons look bigger */
-            transition: all 0.2s ease;
-            border: 1px solid transparent;
+            background-color: #21262d; border-radius: 12px; color: #8b949e; 
+            padding: 12px 28px; transition: all 0.2s ease;
         }
-
-        .stTabs [data-baseweb="tab"]:hover {
-            border-color: #30363d;
-            background-color: #30363d;
-        }
-
         .stTabs [aria-selected="true"] { 
-            background: linear-gradient(135deg, #4f46e5, #7c3aed) !important; 
-            color: #fff !important; 
-            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+            background: linear-gradient(135deg, #4f46e5, #7c3aed) !important; color: #fff !important; 
         }
+        </style>
+        """, unsafe_allow_html=True)
 
 # ==========================================
 # 🛠️ 4. BACKEND UTILITIES
 # ==========================================
 def call_gemini_safe(prompt, is_vision=False, img=None):
     api_keys = st.secrets.get("GEMINI_KEYS", [])
+    if not api_keys: return "Error: No API keys configured."
+    
     for key in api_keys:
         try:
             genai.configure(api_key=key)
-            model = genai.GenerativeModel("gemini-2.5-flash")
+            # Corrected model version
+            model = genai.GenerativeModel("gemini-1.5-flash")
             if is_vision and img:
                 response = model.generate_content([prompt, img])
             else:
                 response = model.generate_content(prompt)
             return response.text
-        except (exceptions.ResourceExhausted, exceptions.Unauthenticated):
+        except Exception:
             continue
     return "Error: All API keys exhausted."
 
@@ -186,14 +166,12 @@ with st.sidebar:
         with st.spinner("Processing..."):
             text = extract_text(file)
             st.session_state.index, st.session_state.chunks = build_db(text)
-            st.session_state.full_text = text
             st.success("System Ready!")
 
 if st.session_state.index:
     tabs = st.tabs(["📊 Dashboard", "💬 Tutor", "🧠 Quiz", "📸 Vision", "🧪 Simulation", "📚 Research"])
     tab1, tab2, tab3, tab4, tab5, tab6 = tabs
 
-    # 1. DASHBOARD
     with tab1:
         st.subheader("Personalized Learning Analytics")
         c1, c2, c3 = st.columns(3)
@@ -201,10 +179,7 @@ if st.session_state.index:
         c2.metric("Quizzes Completed", st.session_state.student_stats['quizzes'])
         c3.metric("Path Progress", f"{st.session_state.student_stats['progress']}%")
         st.progress(st.session_state.student_stats['progress'] / 100)
-        if st.session_state.student_stats['weak_topics']:
-            st.warning(f"⚠️ Knowledge Gaps: {', '.join(set(st.session_state.student_stats['weak_topics']))}")
 
-    # 2. MULTI-AGENT CHAT
     with tab2:
         st.subheader("Verified Biotech Tutor")
         for msg in st.session_state.messages:
@@ -213,14 +188,12 @@ if st.session_state.index:
             st.session_state.messages.append({"role": "user", "content": q})
             with st.chat_message("user"): st.markdown(q)
             context = "\n".join(retrieve(q))
-            with st.status("Agentic Verification...") as status:
+            with st.status("Agentic Verification..."):
                 draft = call_gemini_safe(f"Explain: {q}\nContext: {context}")
-                verified = call_gemini_safe(f"Critic: Fix errors in draft based ONLY on context: {draft}\nContext: {context}")
-                status.update(label="Response Verified", state="complete")
+                verified = call_gemini_safe(f"Critic: Fix errors based ONLY on context: {draft}\nContext: {context}")
                 with st.chat_message("assistant"): st.markdown(verified)
                 st.session_state.messages.append({"role": "assistant", "content": verified})
 
-    # 3. QUIZ
     with tab3:
         st.subheader("Adaptive Assessment")
         if st.button("Generate Contextual Quiz"):
@@ -236,20 +209,21 @@ if st.session_state.index:
                 st.session_state.student_stats['progress'] = min(100, st.session_state.student_stats['progress'] + 10)
                 if score < 4: st.session_state.student_stats['weak_topics'].append(topic)
                 conn = sqlite3.connect('biostep_users.db')
-                c = conn.cursor(); c.execute("REPLACE INTO users VALUES (?, ?, ?, ?)", (username, name, st.session_state.student_stats['mastery'], st.session_state.student_stats['progress']))
+                c = conn.cursor()
+                c.execute("INSERT OR REPLACE INTO users (username, name, mastery, progress) VALUES (?, ?, ?, ?)", 
+                          (username, name, st.session_state.student_stats['mastery'], st.session_state.student_stats['progress']))
                 conn.commit(); conn.close(); st.rerun()
 
-    # 4. VISION
     with tab4:
         st.subheader("Lab-to-Logic Vision Agent")
         img_file = st.file_uploader("Upload Lab Visuals", type=['jpg','png','jpeg'])
         if img_file and st.button("Analyze Visual Data"):
-            img = Image.open(img_file); st.image(img, width='stretch')
+            img = Image.open(img_file)
+            st.image(img, use_container_width=True) # Updated parameter
             with st.spinner("Analyzing..."):
                 st.session_state.last_vision = call_gemini_safe("Analyze this biotech image technical findings.", is_vision=True, img=img)
         if st.session_state.last_vision: st.info(st.session_state.last_vision)
 
-    # 5. SIMULATION
     with tab5:
         st.subheader("Protocol Logic Simulator")
         proto = st.text_input("Experiment Name")
@@ -258,7 +232,6 @@ if st.session_state.index:
                 st.session_state.last_sim = call_gemini_safe(f"Generate Python logic for protocol: {proto}")
         if st.session_state.last_sim: st.code(st.session_state.last_sim, language='python')
 
-    # 6. RESEARCH
     with tab6:
         st.subheader("Research Scout")
         topic_scout = st.text_input("Search Latest Literature")
@@ -268,4 +241,3 @@ if st.session_state.index:
         if st.session_state.last_scout: st.markdown(st.session_state.last_scout)
 else:
     st.info("👈 Please upload a Biotech document in the sidebar to unlock the platform.")
-
