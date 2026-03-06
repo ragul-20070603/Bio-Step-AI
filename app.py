@@ -14,7 +14,7 @@ import streamlit_authenticator as stauth
 # ==========================================
 st.set_page_config(page_title="Bio-Step AI", page_icon="🧬", layout="wide")
 
-# Persistent Storage for AI Outputs (Prevents Vanishing)
+# Persistent Storage for AI Outputs
 if 'last_quiz' not in st.session_state: st.session_state.last_quiz = ""
 if 'last_sim' not in st.session_state: st.session_state.last_sim = ""
 if 'last_scout' not in st.session_state: st.session_state.last_scout = ""
@@ -76,89 +76,43 @@ if not st.session_state.get("authentication_status"):
 name = st.session_state["name"]
 username = st.session_state["username"]
 
-st.sidebar.title(f"Welcome, {name}!")
-authenticator.logout('Logout', 'sidebar')
+# --- SIDEBAR & THEME TOGGLE ---
+with st.sidebar:
+    st.title(f"Welcome, {name}!")
+    theme = st.toggle("☀️ Light Mode", value=False)
+    authenticator.logout('Logout', 'sidebar')
 
 # ==========================================
-# 🎨 3. UI CUSTOMIZATION (DARK MODE)
+# 🎨 3. DYNAMIC UI CUSTOMIZATION
 # ==========================================
-# ==========================================
-# 🎨 3. UI CUSTOMIZATION (FIXED TEXT VISIBILITY)
-# ==========================================
-st.markdown("""
-    <style>
-    /* Main Background and Core Text */
-    .stApp { 
-        background-color: #0e1117; 
-        color: #e0e6ed; 
-        font-family: 'Inter', sans-serif; 
-    }
-    
-    /* Sidebar Styling */
-    [data-testid="stSidebar"] { 
-        background-color: #161b22; 
-        border-right: 1px solid #30363d; 
-    }
-    
-    /* FIX: Force AI Chat Text to be Bright White */
-    .stChatMessage {
-        background-color: #1c2128 !important; /* Slightly lighter than background */
-        border: 1px solid #30363d !important;
-        color: #ffffff !important;
-        border-radius: 10px;
-        margin-bottom: 10px;
-    }
-
-    /* Target all text inside chat bubbles */
-    .stChatMessage [data-testid="stMarkdownContainer"] p {
-        color: #ffffff !important;
-        font-size: 1.05rem;
-    }
-
-    /* Tab Styling */
-    .stTabs [data-baseweb="tab-panel"] { 
-        background-color: #161b22; 
-        padding: 25px; 
-        border-radius: 15px; 
-        border: 1px solid #30363d; 
-        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3); 
-        margin-top: 15px; 
-    }
-    
-    .stTabs [data-baseweb="tab"] { 
-        height: 50px; 
-        background-color: #1f2937; 
-        border-radius: 8px; 
-        color: #9ca3af; 
-        font-weight: 600; 
-        padding: 0 20px; 
-    }
-    
-    .stTabs [aria-selected="true"] { 
-        background-color: #4f46e5 !important; 
-        color: #ffffff !important; 
-        border-bottom: 2px solid #818cf8 !important; 
-    }
-    
-    /* Metric and Button Styling */
-    [data-testid="stMetricValue"] { color: #818cf8; font-weight: 800; }
-    
-    .stButton>button { 
-        border-radius: 10px; 
-        border: none; 
-        background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%); 
-        color: white; 
-        font-weight: bold; 
-        padding: 0.6rem 2rem; 
-    }
-    
-    .stButton>button:hover { 
-        opacity: 0.9; 
-        transform: scale(1.02); 
-        color: white; 
-    }
-    </style>
-    """, unsafe_allow_html=True)
+if theme: # LIGHT MODE
+    st.markdown("""
+        <style>
+        .stApp { background-color: #f8faff; color: #1e293b; font-family: 'Inter', sans-serif; }
+        [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; }
+        .stTabs [data-baseweb="tab-panel"] { background-color: #ffffff; padding: 25px; border-radius: 15px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); margin-top: 15px; }
+        .stTabs [data-baseweb="tab"] { height: 50px; background-color: #f1f5f9; border-radius: 8px; color: #64748b; font-weight: 600; }
+        .stTabs [aria-selected="true"] { background-color: #4f46e5 !important; color: #ffffff !important; }
+        [data-testid="stMetricValue"] { color: #4f46e5; font-weight: 800; }
+        .stChatMessage { background-color: #ffffff !important; border: 1px solid #e2e8f0 !important; color: #1e293b !important; }
+        .stChatMessage [data-testid="stMarkdownContainer"] p { color: #1e293b !important; }
+        .stButton>button { border-radius: 10px; background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%); color: white; }
+        </style>
+        """, unsafe_allow_html=True)
+else: # DARK MODE
+    st.markdown("""
+        <style>
+        .stApp { background-color: #0e1117; color: #e0e6ed; font-family: 'Inter', sans-serif; }
+        [data-testid="stSidebar"] { background-color: #161b22; border-right: 1px solid #30363d; }
+        .stTabs [data-baseweb="tab-panel"] { background-color: #161b22; padding: 25px; border-radius: 15px; border: 1px solid #30363d; box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3); margin-top: 15px; }
+        .stTabs [data-baseweb="tab"] { height: 50px; background-color: #1f2937; border-radius: 8px; color: #9ca3af; font-weight: 600; }
+        .stTabs [aria-selected="true"] { background-color: #4f46e5 !important; color: #ffffff !important; border-bottom: 2px solid #818cf8 !important; }
+        [data-testid="stMetricValue"] { color: #818cf8; font-weight: 800; }
+        .stChatMessage { background-color: #1c2128 !important; border: 1px solid #30363d !important; color: #ffffff !important; }
+        .stChatMessage [data-testid="stMarkdownContainer"] p { color: #ffffff !important; font-size: 1.05rem; }
+        .stButton>button { border-radius: 10px; background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%); color: white; }
+        </style>
+        """, unsafe_allow_html=True)
 
 # ==========================================
 # 🛠️ 4. BACKEND UTILITIES
@@ -223,38 +177,22 @@ if st.session_state.index:
         if st.session_state.student_stats['weak_topics']:
             st.warning(f"⚠️ Knowledge Gaps: {', '.join(set(st.session_state.student_stats['weak_topics']))}")
 
-    # 2. MULTI-AGENT CHAT
-    # 2. MULTI-AGENT CHAT (Fixed for Persistence)
+    # 2. MULTI-AGENT CHAT (With Conversion History)
     with tab2:
         st.subheader("Verified Biotech Tutor")
-    
-    # Initialize chat history if it doesn't exist
-        if "messages" not in st.session_state:
-            st.session_state.messages = []
-
-    # Display previous messages from history
-        for message in st.session_state.messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
+        if "messages" not in st.session_state: st.session_state.messages = []
+        for msg in st.session_state.messages:
+            with st.chat_message(msg["role"]): st.markdown(msg["content"])
 
         if q := st.chat_input("Ask a technical question..."):
-        # Add user message to history
             st.session_state.messages.append({"role": "user", "content": q})
-            with st.chat_message("user"):
-                st.markdown(q)
-            
+            with st.chat_message("user"): st.markdown(q)
             context = "\n".join(retrieve(q))
-        
-            with st.status("Agentic Reasoning In Progress...") as status:
-                st.write("Tutor drafting response...")
+            with st.status("Agentic Reasoning...") as status:
                 draft = call_gemini_safe(f"Explain this biotech concept: {q}\nContext: {context}")
-                st.write("Scientific Critic verifying accuracy...")
-                verified = call_gemini_safe(f"Scientific Critic: Correct errors in this draft using ONLY the context: {draft}\nContext: {context}")
+                verified = call_gemini_safe(f"Scientific Critic: Correct this draft using ONLY the context: {draft}\nContext: {context}")
                 status.update(label="Response Verified", state="complete")
-            
-            # Display and SAVE the verified response to history
-                with st.chat_message("assistant"):
-                    st.markdown(verified)
+                with st.chat_message("assistant"): st.markdown(verified)
                 st.session_state.messages.append({"role": "assistant", "content": verified})
 
     # 3. QUIZ (Fixed for Persistence)
@@ -263,7 +201,6 @@ if st.session_state.index:
         if st.button("Generate Contextual Quiz"):
             with st.spinner("Creating Quiz..."):
                 st.session_state.last_quiz = call_gemini_safe(f"Create a 5-question MCQ from: {st.session_state.chunks[:5]}")
-        
         if st.session_state.last_quiz:
             st.write(st.session_state.last_quiz)
             score = st.slider("Score (0-5)", 0, 5, 4)
@@ -274,48 +211,35 @@ if st.session_state.index:
                 st.session_state.student_stats['progress'] = min(100, st.session_state.student_stats['progress'] + 10)
                 if score < 4: st.session_state.student_stats['weak_topics'].append(topic)
                 conn = sqlite3.connect('biostep_users.db')
-                c = conn.cursor()
-                c.execute("REPLACE INTO users VALUES (?, ?, ?, ?)", (username, name, st.session_state.student_stats['mastery'], st.session_state.student_stats['progress']))
-                conn.commit(); conn.close()
-                st.rerun()
+                c = conn.cursor(); c.execute("REPLACE INTO users VALUES (?, ?, ?, ?)", (username, name, st.session_state.student_stats['mastery'], st.session_state.student_stats['progress']))
+                conn.commit(); conn.close(); st.rerun()
 
     # 4. VISION (Fixed for Persistence)
     with tab4:
         st.subheader("Lab-to-Logic Vision Agent")
         img_file = st.file_uploader("Upload Gel/Chart", type=['jpg','png','jpeg'])
         if img_file and st.button("Analyze Visual Data"):
-            img = Image.open(img_file)
-            st.image(img, width='stretch')
-            with st.spinner("Analyzing Image..."):
-                st.session_state.last_vision = call_gemini_safe("Analyze this biotech image and explain results.", is_vision=True, img=img)
-        
-        if st.session_state.last_vision:
-            st.info(st.session_state.last_vision)
+            img = Image.open(img_file); st.image(img, width='stretch')
+            with st.spinner("Analyzing..."):
+                st.session_state.last_vision = call_gemini_safe("Analyze this biotech image.", is_vision=True, img=img)
+        if st.session_state.last_vision: st.info(st.session_state.last_vision)
 
     # 5. SIMULATION (Fixed for Persistence)
     with tab5:
         st.subheader("Protocol logic Simulator")
-        proto = st.text_input("Experiment Name (e.g. CRISPR In-Vitro)")
+        proto = st.text_input("Experiment Name")
         if st.button("Simulate Outcome"):
-            with st.spinner("Generating Simulation..."):
-                st.session_state.last_sim = call_gemini_safe(f"Generate Python logic for this experiment based on notes: {proto}")
-        
-        if st.session_state.last_sim:
-            st.code(st.session_state.last_sim, language='python')
+            with st.spinner("Generating..."):
+                st.session_state.last_sim = call_gemini_safe(f"Generate Python logic for: {proto}")
+        if st.session_state.last_sim: st.code(st.session_state.last_sim, language='python')
 
     # 6. RESEARCH (Fixed for Persistence)
     with tab6:
         st.subheader("Research Scout")
         topic_scout = st.text_input("Search Latest Literature")
         if st.button("Scout bioRxiv/PubMed"):
-            with st.spinner("Searching Papers..."):
-                st.session_state.last_scout = call_gemini_safe(f"Find 3 hypothetical recent paper summaries about: {topic_scout}")
-        
-        if st.session_state.last_scout:
-            st.markdown(st.session_state.last_scout)
-        else:
-            st.info("👈 Please upload a Biotech document in the sidebar to unlock the platform.")
-
-
-
-
+            with st.spinner("Searching..."):
+                st.session_state.last_scout = call_gemini_safe(f"Find 3 paper summaries about: {topic_scout}")
+        if st.session_state.last_scout: st.markdown(st.session_state.last_scout)
+else:
+    st.info("👈 Please upload a Biotech document in the sidebar to unlock the platform.")
