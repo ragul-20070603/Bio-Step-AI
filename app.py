@@ -9,9 +9,6 @@ from google.api_core import exceptions
 import sqlite3
 import streamlit_authenticator as stauth
 
-# ==========================================
-# 🔐 1. INITIALIZATION & SESSION PERSISTENCE
-# ==========================================
 st.set_page_config(page_title="Bio-Step AI", page_icon="🧬", layout="wide")
 
 if 'last_quiz' not in st.session_state: st.session_state.last_quiz = ""
@@ -41,9 +38,6 @@ def init_db():
 
 init_db()
 
-# ==========================================
-# 🔑 2. AUTHENTICATION CONFIG
-# ==========================================
 names = ['Ragul P', 'Reena J', 'Pranathi P K', 'Rohith G']
 usernames = ['ragul', 'reena', 'pranathi', 'rohith']
 passwords = ['rag2007', 'reen2006', 'pran2007', 'rgm2006']
@@ -76,16 +70,10 @@ with st.sidebar:
     st.write("---")
     authenticator.logout('Logout', 'sidebar')
 
-# ==========================================
-# 🎨 3. TEAL & SLATE THEME
-# ==========================================
-
-if theme:  # ── LIGHT MODE: Warm Slate + Teal ──
+if theme:
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-
-        /* ── Base ── */
         .stApp {
             background-color: #f4f6f7;
             background-image:
@@ -94,8 +82,6 @@ if theme:  # ── LIGHT MODE: Warm Slate + Teal ──
             color: #1e2a2a;
             font-family: 'DM Sans', sans-serif;
         }
-
-        /* ── Sidebar ── */
         [data-testid="stSidebar"] {
             background-color: #e8edef;
             border-right: 1px solid #c8d4d4;
@@ -103,12 +89,7 @@ if theme:  # ── LIGHT MODE: Warm Slate + Teal ──
         [data-testid="stSidebar"] * { color: #1e2a2a !important; }
         [data-testid="stSidebar"] h1, 
         [data-testid="stSidebar"] h2 { color: #0f766e !important; }
-
-        /* ── Tabs ── */
-        .stTabs [data-baseweb="tab-list"] {
-            background: transparent;
-            gap: 6px;
-        }
+        .stTabs [data-baseweb="tab-list"] { background: transparent; gap: 6px; }
         .stTabs [data-baseweb="tab"] {
             background-color: #dce6e6;
             border-radius: 10px;
@@ -131,73 +112,39 @@ if theme:  # ── LIGHT MODE: Warm Slate + Teal ──
             padding: 28px;
             margin-top: 10px;
         }
-
-        /* ── Chat ── */
         .stChatMessage {
             background-color: #ffffff !important;
             border: 1px solid #c8d4d4 !important;
             border-radius: 14px;
         }
-        .stChatMessage [data-testid="stMarkdownContainer"] p {
-            color: #1e2a2a !important;
-            font-size: 1rem;
-        }
-
-        /* ── Buttons ── */
+        .stChatMessage [data-testid="stMarkdownContainer"] p { color: #1e2a2a !important; font-size: 1rem; }
         .stButton>button {
-            width: 100%;
-            border-radius: 10px;
-            height: 48px;
-            background: #0f766e;
-            border: none;
-            font-weight: 600;
-            color: #f0fdfb;
-            font-family: 'DM Sans', sans-serif;
-            letter-spacing: 0.3px;
-            transition: background 0.2s, box-shadow 0.2s;
+            width: 100%; border-radius: 10px; height: 48px;
+            background: #0f766e; border: none; font-weight: 600;
+            color: #f0fdfb; font-family: 'DM Sans', sans-serif;
+            letter-spacing: 0.3px; transition: background 0.2s, box-shadow 0.2s;
         }
-        .stButton>button:hover {
-            background: #0d6b64;
-            box-shadow: 0 4px 16px rgba(15,118,110,0.25);
-        }
-
-        /* ── Inputs ── */
-        .stTextInput>div>div>input,
-        .stChatInputContainer textarea {
-            background: #ffffff !important;
-            border: 1px solid #a8c0c0 !important;
-            border-radius: 10px !important;
-            color: #1e2a2a !important;
+        .stButton>button:hover { background: #0d6b64; box-shadow: 0 4px 16px rgba(15,118,110,0.25); }
+        .stTextInput>div>div>input, .stChatInputContainer textarea {
+            background: #ffffff !important; border: 1px solid #a8c0c0 !important;
+            border-radius: 10px !important; color: #1e2a2a !important;
             font-family: 'DM Mono', monospace !important;
         }
-
-        /* ── Metric cards ── */
         [data-testid="metric-container"] {
-            background: #ffffff;
-            border: 1px solid #c8d4d4;
-            border-radius: 14px;
-            padding: 16px;
+            background: #ffffff; border: 1px solid #c8d4d4; border-radius: 14px; padding: 16px;
         }
         [data-testid="metric-container"] label { color: #4a6060 !important; }
         [data-testid="metric-container"] [data-testid="stMetricValue"] { color: #0f766e !important; font-weight: 700; }
-
-        /* ── Progress bar ── */
         [data-testid="stProgressBar"] > div { background-color: #2dd4bf !important; }
-
-        /* ── Code blocks ── */
         .stCode { font-family: 'DM Mono', monospace !important; }
-
-        /* ── Headings ── */
         h1, h2, h3 { color: #0f766e; font-family: 'DM Sans', sans-serif; font-weight: 700; }
         </style>
     """, unsafe_allow_html=True)
 
-else:  # ── DARK MODE: Deep Slate + Teal ──
+else:
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-
-        /* ── Base ── */
         .stApp {
             background-color: #0d1a1a;
             background-image:
@@ -206,125 +153,61 @@ else:  # ── DARK MODE: Deep Slate + Teal ──
             color: #e2f0ef;
             font-family: 'DM Sans', sans-serif;
         }
-
-        /* ── Sidebar ── */
-        [data-testid="stSidebar"] {
-            background-color: #0a1212;
-            border-right: 1px solid #1a3333;
-        }
+        [data-testid="stSidebar"] { background-color: #0a1212; border-right: 1px solid #1a3333; }
         [data-testid="stSidebar"] * { color: #b2cece !important; }
-        [data-testid="stSidebar"] h1,
-        [data-testid="stSidebar"] h2 { color: #2dd4bf !important; }
-
-        /* ── Tabs ── */
-        .stTabs [data-baseweb="tab-list"] {
-            background: transparent;
-            gap: 6px;
-        }
+        [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2 { color: #2dd4bf !important; }
+        .stTabs [data-baseweb="tab-list"] { background: transparent; gap: 6px; }
         .stTabs [data-baseweb="tab"] {
-            background-color: #132424;
-            border-radius: 10px;
-            color: #7aaaa8;
-            font-weight: 500;
-            padding: 10px 22px;
-            font-family: 'DM Sans', sans-serif;
+            background-color: #132424; border-radius: 10px; color: #7aaaa8;
+            font-weight: 500; padding: 10px 22px; font-family: 'DM Sans', sans-serif;
             border: 1px solid #1a3333;
         }
         .stTabs [aria-selected="true"] {
             background: linear-gradient(135deg, #0f766e, #0d9488) !important;
-            color: #f0fdfb !important;
-            border-color: transparent !important;
+            color: #f0fdfb !important; border-color: transparent !important;
             box-shadow: 0 4px 18px rgba(13,148,136,0.35);
         }
         .stTabs [data-baseweb="tab-panel"] {
-            background: rgba(13, 26, 26, 0.80);
-            backdrop-filter: blur(14px);
-            border: 1px solid #1a3333;
-            border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.45);
-            padding: 32px;
-            margin-top: 10px;
+            background: rgba(13, 26, 26, 0.80); backdrop-filter: blur(14px);
+            border: 1px solid #1a3333; border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.45); padding: 32px; margin-top: 10px;
         }
-
-        /* ── Chat ── */
         .stChatMessage {
-            background-color: #132424 !important;
-            border: 1px solid #1e3c3c !important;
-            border-radius: 14px;
+            background-color: #132424 !important; border: 1px solid #1e3c3c !important; border-radius: 14px;
         }
         .stChatMessage [data-testid="stMarkdownContainer"] p {
-            color: #d4ecea !important;
-            font-size: 1.05rem;
-            line-height: 1.7;
+            color: #d4ecea !important; font-size: 1.05rem; line-height: 1.7;
         }
-
-        /* ── Buttons ── */
         .stButton>button {
-            width: 100%;
-            border-radius: 10px;
-            height: 48px;
-            background: linear-gradient(90deg, #0f766e, #0d9488);
-            border: none;
-            font-weight: 700;
-            color: #f0fdfb;
-            font-family: 'DM Sans', sans-serif;
-            letter-spacing: 0.3px;
-            transition: opacity 0.2s, box-shadow 0.2s;
+            width: 100%; border-radius: 10px; height: 48px;
+            background: linear-gradient(90deg, #0f766e, #0d9488); border: none;
+            font-weight: 700; color: #f0fdfb; font-family: 'DM Sans', sans-serif;
+            letter-spacing: 0.3px; transition: opacity 0.2s, box-shadow 0.2s;
         }
-        .stButton>button:hover {
-            opacity: 0.88;
-            box-shadow: 0 6px 20px rgba(13,148,136,0.40);
-        }
-
-        /* ── Inputs ── */
-        .stTextInput>div>div>input,
-        .stChatInputContainer textarea {
-            background: #132424 !important;
-            border: 1px solid #1e3c3c !important;
-            border-radius: 10px !important;
-            color: #e2f0ef !important;
+        .stButton>button:hover { opacity: 0.88; box-shadow: 0 6px 20px rgba(13,148,136,0.40); }
+        .stTextInput>div>div>input, .stChatInputContainer textarea {
+            background: #132424 !important; border: 1px solid #1e3c3c !important;
+            border-radius: 10px !important; color: #e2f0ef !important;
             font-family: 'DM Mono', monospace !important;
         }
-
-        /* ── Metric cards ── */
         [data-testid="metric-container"] {
-            background: #132424;
-            border: 1px solid #1e3c3c;
-            border-radius: 14px;
-            padding: 16px;
+            background: #132424; border: 1px solid #1e3c3c; border-radius: 14px; padding: 16px;
         }
         [data-testid="metric-container"] label { color: #7aaaa8 !important; }
         [data-testid="metric-container"] [data-testid="stMetricValue"] {
-            color: #2dd4bf !important;
-            font-weight: 700;
-            font-size: 1.6rem;
+            color: #2dd4bf !important; font-weight: 700; font-size: 1.6rem;
         }
-
-        /* ── Progress bar ── */
         [data-testid="stProgressBar"] > div { background-color: #2dd4bf !important; }
-
-        /* ── Code blocks ── */
-        .stCode, code { 
-            background: #0a1212 !important;
-            border: 1px solid #1e3c3c !important;
-            font-family: 'DM Mono', monospace !important;
-            color: #5eead4 !important;
+        .stCode, code {
+            background: #0a1212 !important; border: 1px solid #1e3c3c !important;
+            font-family: 'DM Mono', monospace !important; color: #5eead4 !important;
         }
-
-        /* ── Alerts / Info boxes ── */
         .stAlert { border-radius: 12px !important; border-left-color: #2dd4bf !important; }
-
-        /* ── Headings ── */
         h1, h2, h3 { color: #2dd4bf; font-family: 'DM Sans', sans-serif; font-weight: 700; }
-
-        /* ── Slider ── */
         [data-testid="stSlider"] [data-baseweb="slider"] [data-testid="stTickBar"] { color: #7aaaa8; }
         </style>
     """, unsafe_allow_html=True)
 
-# ==========================================
-# 🛠️ 4. BACKEND UTILITIES
-# ==========================================
 def call_gemini_safe(prompt, is_vision=False, img=None):
     api_keys = st.secrets.get("GEMINI_KEYS", [])
     for key in api_keys:
@@ -357,9 +240,6 @@ def retrieve(query, top_k=3):
     _, I = st.session_state.index.search(np.array(query_emb).astype('float32'), top_k)
     return [st.session_state.chunks[i] for i in I[0]]
 
-# ==========================================
-# 🚀 5. CORE APP FEATURES
-# ==========================================
 with st.sidebar:
     st.header("📂 Knowledge Ingestion")
     file = st.file_uploader("Upload Syllabus/Notes (PDF)", type="pdf")
