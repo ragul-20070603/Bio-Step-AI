@@ -79,7 +79,7 @@ username = st.session_state["username"]
 # 🎨 ENHANCED DESIGNER SIDEBAR
 # ==========================================
 with st.sidebar:
-    # 1. Profile Section with custom CSS for a "Card" look
+    # 1. Profile Section
     st.markdown(f"""
         <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px;">
             <h4 style="margin: 0; color: #818cf8;">🧬 Bio-Step AI</h4>
@@ -89,20 +89,16 @@ with st.sidebar:
         </div>
     """, unsafe_allow_html=True)
 
-    # 2. Controls Section
+    # 2. Controls
     st.subheader("⚙️ Preferences")
     theme_choice = st.toggle("☀️ Light Mode", value=False)
-    
-    # Logout placed in a small, discreet button
     authenticator.logout('Logout', 'sidebar')
-    
     st.markdown("---")
 
-    # 3. Knowledge Ingestion Section
+    # 3. Knowledge Base (THE ONLY UPLOADER YOU NEED)
     st.subheader("📂 Knowledge Base")
     st.info("Upload your Biotech PDFs to initialize the neural engine.")
     
-    # Styling the file uploader and button
     file = st.file_uploader("Drop Syllabus/Notes here", type="pdf", label_visibility="collapsed")
     
     if file:
@@ -116,7 +112,7 @@ with st.sidebar:
 
     st.markdown("---")
     
-    # 4. Quick Stats Mini-Widget
+    # 4. Footer Stats
     st.markdown(f"""
         <div style="font-size: 0.8rem; opacity: 0.6; text-align: center;">
             System Version: 3.0.4-Flash<br>
@@ -124,6 +120,8 @@ with st.sidebar:
         </div>
     """, unsafe_allow_html=True)
 
+    # ❌ REMOVE ANY EXTRA 'st.file_uploader' OR 'st.header("Knowledge Ingestion")' 
+    # THAT APPEARS AFTER THIS POINT.
 # ==========================================
 # 🛠️ 4. BACKEND UTILITIES
 # ==========================================
@@ -254,4 +252,5 @@ if st.session_state.index:
         if st.session_state.last_scout: st.markdown(st.session_state.last_scout)
 else:
     st.info("👈 Please upload a Biotech document in the sidebar to unlock the platform.")
+
 
