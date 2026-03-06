@@ -14,33 +14,31 @@ import streamlit_authenticator as stauth
 # ==========================================
 st.set_page_config(page_title="Bio-Step AI", page_icon="🧬", layout="wide")
 
-# Persistent Storage
-if 'last_quiz' not in st.session_state: st.session_state.last_quiz = ""
-if 'last_sim' not in st.session_state: st.session_state.last_sim = ""
-if 'last_scout' not in st.session_state: st.session_state.last_scout = ""
-if 'last_vision' not in st.session_state: st.session_state.last_vision = ""
-if 'messages' not in st.session_state: st.session_state.messages = []
-
-# Neural Engine Initialization
-if 'embed_model' not in st.session_state:
-    with st.spinner("Initializing Scientific Neural Engine..."):
-        st.session_state.embed_model = SentenceTransformer("all-MiniLM-L6-v2")
+# Initialize Session States
+defaults = {
+    'last_quiz': "", 'last_sim': "", 'last_scout': "", 
+    'last_vision': "", 'messages': [], 'index': None, 'chunks': []
+}
+for key, val in defaults.items():
+    if key not in st.session_state:
+        st.session_state[key] = val
 
 if 'student_stats' not in st.session_state:
     st.session_state.student_stats = {"progress": 0, "mastery": 0.0, "quizzes": 0, "weak_topics": []}
 
-if 'index' not in st.session_state:
-    st.session_state.index = None
-    st.session_state.chunks = []
+@st.cache_resource
+def load_embed_model():
+    return SentenceTransformer("all-MiniLM-L6-v2")
+
+st.session_state.embed_model = load_embed_model()
 
 # --- DATABASE SETUP ---
 def init_db():
-    conn = sqlite3.connect('biostep_users.db')
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS users 
-                 (username TEXT PRIMARY KEY, name TEXT, mastery REAL, progress INTEGER)''')
-    conn.commit()
-    conn.close()
+    with sqlite3.connect('biostep_users.db') as conn:
+        c = conn.cursor()
+        c.execute('''CREATE TABLE IF NOT EXISTS users 
+                     (username TEXT PRIMARY KEY, name TEXT, mastery REAL, progress INTEGER)''')
+        conn.commit()
 
 init_db()
 
@@ -56,65 +54,53 @@ authenticator = stauth.Authenticate(
     'biostep_cookie', 'auth_key', cookie_expiry_days=30
 )
 
-# --- RENDER CENTERED LOGIN ---
+# --- RENDER LOGIN ---
 if not st.session_state.get("authentication_status"):
-    st.write("#") 
-    st.write("#")
     col1, col2, col3 = st.columns([1, 1.2, 1]) 
     with col2:
+        st.write("#")
         st.markdown("<h2 style='text-align: center; color: #818cf8;'>🧬 Bio-Step AI Portal</h2>", unsafe_allow_html=True)
         authenticator.login(location='main')
-        
         if st.session_state.get("authentication_status") == False:
             st.error('Username/password is incorrect')
         elif st.session_state.get("authentication_status") is None:
             st.info('Please enter your biotech credentials')
-    
     if not st.session_state.get("authentication_status"):
         st.stop() 
 
-# --- ACCESS USER DETAILS ---
+# --- USER CONTEXT ---
 name = st.session_state["name"]
 username = st.session_state["username"]
 
-# --- SIDEBAR & THEME TOGGLE ---
+# ==========================================
+# 🎨 3. UI CUSTOMIZATION (THEMING)
+# ==========================================
 with st.sidebar:
     st.title(f"Welcome, {name}!")
-    theme = st.toggle("☀️ Light Mode", value=False)
+    theme_choice = st.toggle("☀️ Light Mode", value=False)
     st.write("---")
     authenticator.logout('Logout', 'sidebar')
 
-# ==========================================
-# 🎨 3. INDUSTRY-GRADE UI CUSTOMIZATION
-# ==========================================
-if theme: # LIGHT MODE
+if theme_choice:
     st.markdown("""
         <style>
-        .stApp { background-color: #fdfdfd; color: #1e293b; font-family: 'Inter', sans-serif; }
-        [data-testid="stSidebar"] { background-color: #f8fafc; border-right: 1px solid #e2e8f0; }
+        .stApp { background-color: #fdfdfd; color: #1e293b; }
         .stTabs [data-baseweb="tab-panel"] { 
-            background: rgba(255, 255, 255, 0.8); border: 1px solid #e2e8f0; border-radius: 20px; padding: 30px;
+            background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 30px;
         }
-        .stTabs [aria-selected="true"] { background-color: #4f46e5 !important; color: #ffffff !important; }
+        .stTabs [aria-selected="true"] { background-color: #4f46e5 !important; color: white !important; }
         </style>
         """, unsafe_allow_html=True)
-else: # DARK MODE
+else:
     st.markdown("""
         <style>
-        .stApp { background: radial-gradient(circle at top right, #111827, #010409); color: #f9fafb; font-family: 'Inter', sans-serif; }
-        [data-testid="stSidebar"] { background-color: #0d1117; border-right: 1px solid #30363d; }
+        .stApp { background: radial-gradient(circle at top right, #111827, #010409); color: #f9fafb; }
         .stTabs [data-baseweb="tab-panel"] { 
             background: rgba(22, 27, 34, 0.7); backdrop-filter: blur(12px);
             border: 1px solid #30363d; border-radius: 24px; padding: 32px;
         }
-        .stTabs [data-baseweb="tab-list"] { gap: 24px; padding-bottom: 10px; }
-        .stTabs [data-baseweb="tab"] { 
-            background-color: #21262d; border-radius: 12px; color: #8b949e; 
-            padding: 12px 28px; transition: all 0.2s ease;
-        }
-        .stTabs [aria-selected="true"] { 
-            background: linear-gradient(135deg, #4f46e5, #7c3aed) !important; color: #fff !important; 
-        }
+        .stTabs [data-baseweb="tab"] { background-color: #21262d; border-radius: 12px; color: #8b949e; padding: 10px 20px; }
+        .stTabs [aria-selected="true"] { background: linear-gradient(135deg, #4f46e5, #7c3aed) !important; color: white !important; }
         </style>
         """, unsafe_allow_html=True)
 
@@ -123,12 +109,11 @@ else: # DARK MODE
 # ==========================================
 def call_gemini_safe(prompt, is_vision=False, img=None):
     api_keys = st.secrets.get("GEMINI_KEYS", [])
-    if not api_keys: return "Error: No API keys configured."
+    if not api_keys: return "Error: No API keys in Secrets."
     
     for key in api_keys:
         try:
             genai.configure(api_key=key)
-            # Corrected model version
             model = genai.GenerativeModel("gemini-1.5-flash")
             if is_vision and img:
                 response = model.generate_content([prompt, img])
@@ -137,7 +122,7 @@ def call_gemini_safe(prompt, is_vision=False, img=None):
             return response.text
         except Exception:
             continue
-    return "Error: All API keys exhausted."
+    return "Error: API Keys exhausted or connection failed."
 
 def extract_text(file):
     reader = PyPDF2.PdfReader(file)
@@ -170,9 +155,9 @@ with st.sidebar:
 
 if st.session_state.index:
     tabs = st.tabs(["📊 Dashboard", "💬 Tutor", "🧠 Quiz", "📸 Vision", "🧪 Simulation", "📚 Research"])
-    tab1, tab2, tab3, tab4, tab5, tab6 = tabs
-
-    with tab1:
+    
+    # 1. DASHBOARD
+    with tabs[0]:
         st.subheader("Personalized Learning Analytics")
         c1, c2, c3 = st.columns(3)
         c1.metric("Mastery Score", f"{st.session_state.student_stats['mastery']}%")
@@ -180,10 +165,13 @@ if st.session_state.index:
         c3.metric("Path Progress", f"{st.session_state.student_stats['progress']}%")
         st.progress(st.session_state.student_stats['progress'] / 100)
 
-    with tab2:
+    # 2. TUTOR (RAG)
+    with tabs[1]:
+        
         st.subheader("Verified Biotech Tutor")
         for msg in st.session_state.messages:
             with st.chat_message(msg["role"]): st.markdown(msg["content"])
+        
         if q := st.chat_input("Ask a technical question..."):
             st.session_state.messages.append({"role": "user", "content": q})
             with st.chat_message("user"): st.markdown(q)
@@ -194,7 +182,8 @@ if st.session_state.index:
                 with st.chat_message("assistant"): st.markdown(verified)
                 st.session_state.messages.append({"role": "assistant", "content": verified})
 
-    with tab3:
+    # 3. QUIZ
+    with tabs[2]:
         st.subheader("Adaptive Assessment")
         if st.button("Generate Contextual Quiz"):
             with st.spinner("Creating..."):
@@ -208,23 +197,26 @@ if st.session_state.index:
                 st.session_state.student_stats['mastery'] = (score/5)*100
                 st.session_state.student_stats['progress'] = min(100, st.session_state.student_stats['progress'] + 10)
                 if score < 4: st.session_state.student_stats['weak_topics'].append(topic)
-                conn = sqlite3.connect('biostep_users.db')
-                c = conn.cursor()
-                c.execute("INSERT OR REPLACE INTO users (username, name, mastery, progress) VALUES (?, ?, ?, ?)", 
-                          (username, name, st.session_state.student_stats['mastery'], st.session_state.student_stats['progress']))
-                conn.commit(); conn.close(); st.rerun()
+                with sqlite3.connect('biostep_users.db') as conn:
+                    c = conn.cursor()
+                    c.execute("INSERT OR REPLACE INTO users VALUES (?, ?, ?, ?)", 
+                              (username, name, st.session_state.student_stats['mastery'], st.session_state.student_stats['progress']))
+                    conn.commit()
+                st.rerun()
 
-    with tab4:
+    # 4. VISION
+    with tabs[3]:
         st.subheader("Lab-to-Logic Vision Agent")
         img_file = st.file_uploader("Upload Lab Visuals", type=['jpg','png','jpeg'])
         if img_file and st.button("Analyze Visual Data"):
             img = Image.open(img_file)
-            st.image(img, use_container_width=True) # Updated parameter
+            st.image(img, use_container_width=True)
             with st.spinner("Analyzing..."):
                 st.session_state.last_vision = call_gemini_safe("Analyze this biotech image technical findings.", is_vision=True, img=img)
         if st.session_state.last_vision: st.info(st.session_state.last_vision)
 
-    with tab5:
+    # 5. SIMULATION
+    with tabs[4]:
         st.subheader("Protocol Logic Simulator")
         proto = st.text_input("Experiment Name")
         if st.button("Simulate Outcome"):
@@ -232,7 +224,8 @@ if st.session_state.index:
                 st.session_state.last_sim = call_gemini_safe(f"Generate Python logic for protocol: {proto}")
         if st.session_state.last_sim: st.code(st.session_state.last_sim, language='python')
 
-    with tab6:
+    # 6. RESEARCH
+    with tabs[5]:
         st.subheader("Research Scout")
         topic_scout = st.text_input("Search Latest Literature")
         if st.button("Scout bioRxiv/PubMed"):
