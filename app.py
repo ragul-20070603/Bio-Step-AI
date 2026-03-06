@@ -75,34 +75,54 @@ username = st.session_state["username"]
 # ==========================================
 # 🎨 3. UI CUSTOMIZATION (THEMING)
 # ==========================================
+# ==========================================
+# 🎨 ENHANCED DESIGNER SIDEBAR
+# ==========================================
 with st.sidebar:
-    st.title(f"Welcome, {name}!")
-    theme_choice = st.toggle("☀️ Light Mode", value=False)
-    st.write("---")
-    authenticator.logout('Logout', 'sidebar')
+    # 1. Profile Section with custom CSS for a "Card" look
+    st.markdown(f"""
+        <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px;">
+            <h4 style="margin: 0; color: #818cf8;">🧬 Bio-Step AI</h4>
+            <p style="margin: 0; font-size: 0.9rem; opacity: 0.8;">Student Portal</p>
+            <hr style="margin: 15px 0; opacity: 0.2;">
+            <p style="margin: 0; font-weight: 600;">Welcome, {name}!</p>
+        </div>
+    """, unsafe_allow_html=True)
 
-if theme_choice:
-    st.markdown("""
-        <style>
-        .stApp { background-color: #fdfdfd; color: #1e293b; }
-        .stTabs [data-baseweb="tab-panel"] { 
-            background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 30px;
-        }
-        .stTabs [aria-selected="true"] { background-color: #4f46e5 !important; color: white !important; }
-        </style>
-        """, unsafe_allow_html=True)
-else:
-    st.markdown("""
-        <style>
-        .stApp { background: radial-gradient(circle at top right, #111827, #010409); color: #f9fafb; }
-        .stTabs [data-baseweb="tab-panel"] { 
-            background: rgba(22, 27, 34, 0.7); backdrop-filter: blur(12px);
-            border: 1px solid #30363d; border-radius: 24px; padding: 32px;
-        }
-        .stTabs [data-baseweb="tab"] { background-color: #21262d; border-radius: 12px; color: #8b949e; padding: 10px 20px; }
-        .stTabs [aria-selected="true"] { background: linear-gradient(135deg, #4f46e5, #7c3aed) !important; color: white !important; }
-        </style>
-        """, unsafe_allow_html=True)
+    # 2. Controls Section
+    st.subheader("⚙️ Preferences")
+    theme_choice = st.toggle("☀️ Light Mode", value=False)
+    
+    # Logout placed in a small, discreet button
+    authenticator.logout('Logout', 'sidebar')
+    
+    st.markdown("---")
+
+    # 3. Knowledge Ingestion Section
+    st.subheader("📂 Knowledge Base")
+    st.info("Upload your Biotech PDFs to initialize the neural engine.")
+    
+    # Styling the file uploader and button
+    file = st.file_uploader("Drop Syllabus/Notes here", type="pdf", label_visibility="collapsed")
+    
+    if file:
+        st.markdown(f"**Selected:** `{file.name}`")
+        if st.button("🚀 Initialize Neural Engine", use_container_width=True):
+            with st.spinner("Decoding Bio-Data..."):
+                text = extract_text(file)
+                st.session_state.index, st.session_state.chunks = build_db(text)
+                st.success("Knowledge Base Built!")
+                st.balloons()
+
+    st.markdown("---")
+    
+    # 4. Quick Stats Mini-Widget
+    st.markdown(f"""
+        <div style="font-size: 0.8rem; opacity: 0.6; text-align: center;">
+            System Version: 3.0.4-Flash<br>
+            Neural Engine: all-MiniLM-L6-v2
+        </div>
+    """, unsafe_allow_html=True)
 
 # ==========================================
 # 🛠️ 4. BACKEND UTILITIES
@@ -234,3 +254,4 @@ if st.session_state.index:
         if st.session_state.last_scout: st.markdown(st.session_state.last_scout)
 else:
     st.info("👈 Please upload a Biotech document in the sidebar to unlock the platform.")
+
