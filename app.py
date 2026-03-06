@@ -9,7 +9,7 @@ import sqlite3
 import streamlit_authenticator as stauth
 
 # ==========================================
-# 🔐 1. INITIALIZATION & SESSION PERSISTENCE
+# 🔐 1. INITIALIZATION
 # ==========================================
 st.set_page_config(page_title="Bio-Step AI", page_icon="🧬", layout="wide")
 
@@ -56,7 +56,7 @@ name = st.session_state["name"]
 username = st.session_state["username"]
 
 # ==========================================
-# 🎨 3. DESIGNER SIDEBAR (CLEAN VERSION)
+# 🎨 3. THE ONE AND ONLY SIDEBAR (DESIGNER VERSION)
 # ==========================================
 with st.sidebar:
     # Profile Card
@@ -75,9 +75,9 @@ with st.sidebar:
     
     st.markdown("---")
 
-    # Knowledge Base Uploader
+    # Knowledge Base Uploader (The only uploader in the whole code)
     st.subheader("📂 Knowledge Base")
-    file = st.file_uploader("Upload Notes", type="pdf", label_visibility="collapsed")
+    file = st.file_uploader("Upload Notes (PDF)", type="pdf", label_visibility="collapsed")
     
     if file:
         st.markdown(f"**Ready to Index:** `{file.name}`")
@@ -95,13 +95,13 @@ with st.sidebar:
                 
                 st.session_state.index = index
                 st.session_state.chunks = chunks
-                st.success("Knowledge Base Built!")
+                st.success("System Ready!")
                 st.balloons()
 
     st.markdown("---")
     st.markdown(f"""<div style="font-size: 0.8rem; opacity: 0.6; text-align: center;">V 3.0.4-Flash | Neural: all-MiniLM-L6-v2</div>""", unsafe_allow_html=True)
 
-# Theme CSS
+# Theme Styles
 if theme_choice:
     st.markdown("<style>.stApp { background-color: #fdfdfd; color: #1e293b; }</style>", unsafe_allow_html=True)
 else:
@@ -111,9 +111,10 @@ else:
 # 🛠️ 4. BACKEND UTILITIES
 # ==========================================
 def call_gemini_safe(prompt, is_vision=False, img=None):
-    # Ensure keys are set in your .streamlit/secrets.toml
+    # CRITICAL: This checks your Streamlit Secrets
     api_keys = st.secrets.get("GEMINI_KEYS", [])
-    if not api_keys: return "Error: API Key Missing. Add GEMINI_KEYS to your secrets."
+    if not api_keys:
+        return "⚠️ Error: API Key Missing. Please add 'GEMINI_KEYS' to your Streamlit Secrets."
     
     for key in api_keys:
         try:
@@ -124,9 +125,9 @@ def call_gemini_safe(prompt, is_vision=False, img=None):
             else:
                 response = model.generate_content(prompt)
             return response.text
-        except Exception as e:
+        except Exception:
             continue
-    return "Error: Could not connect to Gemini API. Check your internet or keys."
+    return "❌ Error: API Connection Failed. Check internet or key validity."
 
 def retrieve(query, top_k=3):
     query_emb = st.session_state.embed_model.encode([query])
@@ -155,8 +156,8 @@ if st.session_state.index:
             st.session_state.messages.append({"role": "user", "content": q})
             with st.chat_message("user"): st.markdown(q)
             context = "\n".join(retrieve(q))
-            with st.status("Verifying against Knowledge Base..."):
-                ans = call_gemini_safe(f"Context: {context}\n\nQuestion: {q}\nExplain clearly.")
+            with st.status("Thinking..."):
+                ans = call_gemini_safe(f"Context: {context}\n\nQuestion: {q}")
                 st.session_state.messages.append({"role": "assistant", "content": ans})
                 st.rerun()
 
@@ -173,24 +174,24 @@ if st.session_state.index:
         if img_file and st.button("Analyze Image"):
             img = Image.open(img_file)
             st.image(img, use_container_width=True)
-            res = call_gemini_safe("Analyze this biotech image technical findings.", is_vision=True, img=img)
+            res = call_gemini_safe("Analyze this biotech image.", is_vision=True, img=img)
             st.info(res)
 
     with tabs[4]: # Simulation
         st.subheader("Protocol Simulator")
         proto = st.text_input("Experiment Name", value="Bacterial Growth Kinetics")
         if st.button("Generate Simulation"):
-            with st.spinner("Simulating..."):
-                res = call_gemini_safe(f"Write Python code to simulate: {proto}")
+            with st.spinner("Processing..."):
+                res = call_gemini_safe(f"Generate Python code to simulate: {proto}")
                 st.session_state.last_sim = res
         if st.session_state.last_sim:
             st.code(st.session_state.last_sim, language='python')
 
     with tabs[5]: # Research
         st.subheader("Research Scout")
-        topic = st.text_input("Search Latest Literature")
+        topic = st.text_input("Topic")
         if st.button("Scout Research"):
-            res = call_gemini_safe(f"Summarize 3 recent breakthroughs in: {topic}")
+            res = call_gemini_safe(f"Summarize 3 breakthroughs in: {topic}")
             st.markdown(res)
 else:
-    st.info("👈 Please upload a PDF in the sidebar to unlock the Neural Engine.")
+    st.info("👈 Please upload a PDF in the sidebar and click 'Initialize Neural Engine' to unlock the platform.")
