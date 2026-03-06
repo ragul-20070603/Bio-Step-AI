@@ -14,14 +14,12 @@ import streamlit_authenticator as stauth
 # ==========================================
 st.set_page_config(page_title="Bio-Step AI", page_icon="🧬", layout="wide")
 
-# Persistent Storage for AI Outputs to prevent vanishing
 if 'last_quiz' not in st.session_state: st.session_state.last_quiz = ""
 if 'last_sim' not in st.session_state: st.session_state.last_sim = ""
 if 'last_scout' not in st.session_state: st.session_state.last_scout = ""
 if 'last_vision' not in st.session_state: st.session_state.last_vision = ""
 if 'messages' not in st.session_state: st.session_state.messages = []
 
-# Neural Engine & Stats Initialization
 if 'embed_model' not in st.session_state:
     with st.spinner("Initializing Scientific Neural Engine..."):
         st.session_state.embed_model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -33,7 +31,6 @@ if 'index' not in st.session_state:
     st.session_state.index = None
     st.session_state.chunks = []
 
-# --- DATABASE SETUP ---
 def init_db():
     conn = sqlite3.connect('biostep_users.db')
     c = conn.cursor()
@@ -56,28 +53,23 @@ authenticator = stauth.Authenticate(
     'biostep_cookie', 'auth_key', cookie_expiry_days=30
 )
 
-# --- RENDER CENTERED LOGIN ---
 if not st.session_state.get("authentication_status"):
-    st.write("#") 
     st.write("#")
-    col1, col2, col3 = st.columns([1, 1.2, 1]) 
+    st.write("#")
+    col1, col2, col3 = st.columns([1, 1.2, 1])
     with col2:
-        st.markdown("<h2 style='text-align: center; color: #818cf8;'>🧬 Bio-Step AI Portal</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; color: #2dd4bf;'>🧬 Bio-Step AI Portal</h2>", unsafe_allow_html=True)
         authenticator.login(location='main')
-        
         if st.session_state.get("authentication_status") == False:
             st.error('Username/password is incorrect')
         elif st.session_state.get("authentication_status") is None:
             st.info('Please enter your biotech credentials')
-    
     if not st.session_state.get("authentication_status"):
-        st.stop() 
+        st.stop()
 
-# --- ACCESS USER DETAILS ---
 name = st.session_state["name"]
 username = st.session_state["username"]
 
-# --- SIDEBAR & THEME TOGGLE ---
 with st.sidebar:
     st.title(f"Welcome, {name}!")
     theme = st.toggle("☀️ Light Mode", value=False)
@@ -85,42 +77,250 @@ with st.sidebar:
     authenticator.logout('Logout', 'sidebar')
 
 # ==========================================
-# 🎨 3. INDUSTRY-GRADE UI CUSTOMIZATION
+# 🎨 3. TEAL & SLATE THEME
 # ==========================================
-if theme: # LIGHT MODE (Enterprise White)
+
+if theme:  # ── LIGHT MODE: Warm Slate + Teal ──
     st.markdown("""
         <style>
-        .stApp { background-color: #fdfdfd; color: #1e293b; font-family: 'Inter', system-ui, sans-serif; }
-        [data-testid="stSidebar"] { background-color: #f8fafc; border-right: 1px solid #e2e8f0; }
-        .stTabs [data-baseweb="tab-panel"] { 
-            background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px);
-            border: 1px solid rgba(226, 232, 240, 0.5); border-radius: 20px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07); padding: 30px;
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+        /* ── Base ── */
+        .stApp {
+            background-color: #f4f6f7;
+            background-image:
+                radial-gradient(circle at 20% 10%, rgba(45,212,191,0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 90%, rgba(20,184,166,0.06) 0%, transparent 50%);
+            color: #1e2a2a;
+            font-family: 'DM Sans', sans-serif;
         }
-        .stTabs [data-baseweb="tab"] { font-size: 14px; color: #64748b; }
-        .stTabs [aria-selected="true"] { background-color: #4f46e5 !important; color: #ffffff !important; }
-        .stChatMessage { background-color: #ffffff !important; border: 1px solid #e2e8f0 !important; color: #1e293b !important; border-radius: 12px; }
-        .stChatMessage [data-testid="stMarkdownContainer"] p { color: #1e293b !important; }
-        .stButton>button { width: 100%; border-radius: 12px; height: 50px; background: #4f46e5; border: none; font-weight: 600; color: white; }
+
+        /* ── Sidebar ── */
+        [data-testid="stSidebar"] {
+            background-color: #e8edef;
+            border-right: 1px solid #c8d4d4;
+        }
+        [data-testid="stSidebar"] * { color: #1e2a2a !important; }
+        [data-testid="stSidebar"] h1, 
+        [data-testid="stSidebar"] h2 { color: #0f766e !important; }
+
+        /* ── Tabs ── */
+        .stTabs [data-baseweb="tab-list"] {
+            background: transparent;
+            gap: 6px;
+        }
+        .stTabs [data-baseweb="tab"] {
+            background-color: #dce6e6;
+            border-radius: 10px;
+            color: #4a6060;
+            font-weight: 500;
+            padding: 10px 22px;
+            font-family: 'DM Sans', sans-serif;
+        }
+        .stTabs [aria-selected="true"] {
+            background-color: #0f766e !important;
+            color: #f0fdfb !important;
+            box-shadow: 0 4px 14px rgba(15,118,110,0.3);
+        }
+        .stTabs [data-baseweb="tab-panel"] {
+            background: rgba(255,255,255,0.75);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(200,212,212,0.6);
+            border-radius: 18px;
+            box-shadow: 0 6px 24px rgba(15,118,110,0.07);
+            padding: 28px;
+            margin-top: 10px;
+        }
+
+        /* ── Chat ── */
+        .stChatMessage {
+            background-color: #ffffff !important;
+            border: 1px solid #c8d4d4 !important;
+            border-radius: 14px;
+        }
+        .stChatMessage [data-testid="stMarkdownContainer"] p {
+            color: #1e2a2a !important;
+            font-size: 1rem;
+        }
+
+        /* ── Buttons ── */
+        .stButton>button {
+            width: 100%;
+            border-radius: 10px;
+            height: 48px;
+            background: #0f766e;
+            border: none;
+            font-weight: 600;
+            color: #f0fdfb;
+            font-family: 'DM Sans', sans-serif;
+            letter-spacing: 0.3px;
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        .stButton>button:hover {
+            background: #0d6b64;
+            box-shadow: 0 4px 16px rgba(15,118,110,0.25);
+        }
+
+        /* ── Inputs ── */
+        .stTextInput>div>div>input,
+        .stChatInputContainer textarea {
+            background: #ffffff !important;
+            border: 1px solid #a8c0c0 !important;
+            border-radius: 10px !important;
+            color: #1e2a2a !important;
+            font-family: 'DM Mono', monospace !important;
+        }
+
+        /* ── Metric cards ── */
+        [data-testid="metric-container"] {
+            background: #ffffff;
+            border: 1px solid #c8d4d4;
+            border-radius: 14px;
+            padding: 16px;
+        }
+        [data-testid="metric-container"] label { color: #4a6060 !important; }
+        [data-testid="metric-container"] [data-testid="stMetricValue"] { color: #0f766e !important; font-weight: 700; }
+
+        /* ── Progress bar ── */
+        [data-testid="stProgressBar"] > div { background-color: #2dd4bf !important; }
+
+        /* ── Code blocks ── */
+        .stCode { font-family: 'DM Mono', monospace !important; }
+
+        /* ── Headings ── */
+        h1, h2, h3 { color: #0f766e; font-family: 'DM Sans', sans-serif; font-weight: 700; }
         </style>
-        """, unsafe_allow_html=True)
-else: # DARK MODE (Deep Space Pro)
+    """, unsafe_allow_html=True)
+
+else:  # ── DARK MODE: Deep Slate + Teal ──
     st.markdown("""
         <style>
-        .stApp { background: radial-gradient(circle at top right, #111827, #010409); color: #f9fafb; font-family: 'Inter', system-ui, sans-serif; }
-        [data-testid="stSidebar"] { background-color: #0d1117; border-right: 1px solid #30363d; }
-        .stTabs [data-baseweb="tab-panel"] { 
-            background: rgba(22, 27, 34, 0.7); backdrop-filter: blur(12px);
-            border: 1px solid #30363d; border-radius: 24px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); padding: 32px;
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+        /* ── Base ── */
+        .stApp {
+            background-color: #0d1a1a;
+            background-image:
+                radial-gradient(ellipse at 15% 0%, rgba(45,212,191,0.10) 0%, transparent 45%),
+                radial-gradient(ellipse at 85% 100%, rgba(20,184,166,0.08) 0%, transparent 45%);
+            color: #e2f0ef;
+            font-family: 'DM Sans', sans-serif;
         }
-        .stTabs [data-baseweb="tab"] { background-color: #21262d; border-radius: 12px; color: #8b949e; font-weight: 500; padding: 10px 24px; }
-        .stTabs [aria-selected="true"] { background: linear-gradient(135deg, #4f46e5, #7c3aed) !important; color: #fff !important; }
-        .stChatMessage { background-color: #1c2128 !important; border: 1px solid #30363d !important; color: #ffffff !important; border-radius: 12px; }
-        .stChatMessage [data-testid="stMarkdownContainer"] p { color: #ffffff !important; font-size: 1.05rem; }
-        .stButton>button { width: 100%; border-radius: 12px; height: 50px; background: linear-gradient(90deg, #4f46e5, #7c3aed); border: none; font-weight: 700; color: white; }
+
+        /* ── Sidebar ── */
+        [data-testid="stSidebar"] {
+            background-color: #0a1212;
+            border-right: 1px solid #1a3333;
+        }
+        [data-testid="stSidebar"] * { color: #b2cece !important; }
+        [data-testid="stSidebar"] h1,
+        [data-testid="stSidebar"] h2 { color: #2dd4bf !important; }
+
+        /* ── Tabs ── */
+        .stTabs [data-baseweb="tab-list"] {
+            background: transparent;
+            gap: 6px;
+        }
+        .stTabs [data-baseweb="tab"] {
+            background-color: #132424;
+            border-radius: 10px;
+            color: #7aaaa8;
+            font-weight: 500;
+            padding: 10px 22px;
+            font-family: 'DM Sans', sans-serif;
+            border: 1px solid #1a3333;
+        }
+        .stTabs [aria-selected="true"] {
+            background: linear-gradient(135deg, #0f766e, #0d9488) !important;
+            color: #f0fdfb !important;
+            border-color: transparent !important;
+            box-shadow: 0 4px 18px rgba(13,148,136,0.35);
+        }
+        .stTabs [data-baseweb="tab-panel"] {
+            background: rgba(13, 26, 26, 0.80);
+            backdrop-filter: blur(14px);
+            border: 1px solid #1a3333;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+            padding: 32px;
+            margin-top: 10px;
+        }
+
+        /* ── Chat ── */
+        .stChatMessage {
+            background-color: #132424 !important;
+            border: 1px solid #1e3c3c !important;
+            border-radius: 14px;
+        }
+        .stChatMessage [data-testid="stMarkdownContainer"] p {
+            color: #d4ecea !important;
+            font-size: 1.05rem;
+            line-height: 1.7;
+        }
+
+        /* ── Buttons ── */
+        .stButton>button {
+            width: 100%;
+            border-radius: 10px;
+            height: 48px;
+            background: linear-gradient(90deg, #0f766e, #0d9488);
+            border: none;
+            font-weight: 700;
+            color: #f0fdfb;
+            font-family: 'DM Sans', sans-serif;
+            letter-spacing: 0.3px;
+            transition: opacity 0.2s, box-shadow 0.2s;
+        }
+        .stButton>button:hover {
+            opacity: 0.88;
+            box-shadow: 0 6px 20px rgba(13,148,136,0.40);
+        }
+
+        /* ── Inputs ── */
+        .stTextInput>div>div>input,
+        .stChatInputContainer textarea {
+            background: #132424 !important;
+            border: 1px solid #1e3c3c !important;
+            border-radius: 10px !important;
+            color: #e2f0ef !important;
+            font-family: 'DM Mono', monospace !important;
+        }
+
+        /* ── Metric cards ── */
+        [data-testid="metric-container"] {
+            background: #132424;
+            border: 1px solid #1e3c3c;
+            border-radius: 14px;
+            padding: 16px;
+        }
+        [data-testid="metric-container"] label { color: #7aaaa8 !important; }
+        [data-testid="metric-container"] [data-testid="stMetricValue"] {
+            color: #2dd4bf !important;
+            font-weight: 700;
+            font-size: 1.6rem;
+        }
+
+        /* ── Progress bar ── */
+        [data-testid="stProgressBar"] > div { background-color: #2dd4bf !important; }
+
+        /* ── Code blocks ── */
+        .stCode, code { 
+            background: #0a1212 !important;
+            border: 1px solid #1e3c3c !important;
+            font-family: 'DM Mono', monospace !important;
+            color: #5eead4 !important;
+        }
+
+        /* ── Alerts / Info boxes ── */
+        .stAlert { border-radius: 12px !important; border-left-color: #2dd4bf !important; }
+
+        /* ── Headings ── */
+        h1, h2, h3 { color: #2dd4bf; font-family: 'DM Sans', sans-serif; font-weight: 700; }
+
+        /* ── Slider ── */
+        [data-testid="stSlider"] [data-baseweb="slider"] [data-testid="stTickBar"] { color: #7aaaa8; }
         </style>
-        """, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
 # ==========================================
 # 🛠️ 4. BACKEND UTILITIES
@@ -174,7 +374,6 @@ if st.session_state.index:
     tabs = st.tabs(["📊 Dashboard", "💬 Tutor", "🧠 Quiz", "📸 Vision", "🧪 Simulation", "📚 Research"])
     tab1, tab2, tab3, tab4, tab5, tab6 = tabs
 
-    # 1. DASHBOARD
     with tab1:
         st.subheader("Personalized Learning Analytics")
         c1, c2, c3 = st.columns(3)
@@ -185,7 +384,6 @@ if st.session_state.index:
         if st.session_state.student_stats['weak_topics']:
             st.warning(f"⚠️ Knowledge Gaps: {', '.join(set(st.session_state.student_stats['weak_topics']))}")
 
-    # 2. MULTI-AGENT CHAT
     with tab2:
         st.subheader("Verified Biotech Tutor")
         for msg in st.session_state.messages:
@@ -201,7 +399,6 @@ if st.session_state.index:
                 with st.chat_message("assistant"): st.markdown(verified)
                 st.session_state.messages.append({"role": "assistant", "content": verified})
 
-    # 3. QUIZ
     with tab3:
         st.subheader("Adaptive Assessment")
         if st.button("Generate Contextual Quiz"):
@@ -217,10 +414,10 @@ if st.session_state.index:
                 st.session_state.student_stats['progress'] = min(100, st.session_state.student_stats['progress'] + 10)
                 if score < 4: st.session_state.student_stats['weak_topics'].append(topic)
                 conn = sqlite3.connect('biostep_users.db')
-                c = conn.cursor(); c.execute("REPLACE INTO users VALUES (?, ?, ?, ?)", (username, name, st.session_state.student_stats['mastery'], st.session_state.student_stats['progress']))
+                c = conn.cursor()
+                c.execute("REPLACE INTO users VALUES (?, ?, ?, ?)", (username, name, st.session_state.student_stats['mastery'], st.session_state.student_stats['progress']))
                 conn.commit(); conn.close(); st.rerun()
 
-    # 4. VISION
     with tab4:
         st.subheader("Lab-to-Logic Vision Agent")
         img_file = st.file_uploader("Upload Lab Visuals", type=['jpg','png','jpeg'])
@@ -230,7 +427,6 @@ if st.session_state.index:
                 st.session_state.last_vision = call_gemini_safe("Analyze this biotech image technical findings.", is_vision=True, img=img)
         if st.session_state.last_vision: st.info(st.session_state.last_vision)
 
-    # 5. SIMULATION
     with tab5:
         st.subheader("Protocol Logic Simulator")
         proto = st.text_input("Experiment Name")
@@ -239,7 +435,6 @@ if st.session_state.index:
                 st.session_state.last_sim = call_gemini_safe(f"Generate Python logic for protocol: {proto}")
         if st.session_state.last_sim: st.code(st.session_state.last_sim, language='python')
 
-    # 6. RESEARCH
     with tab6:
         st.subheader("Research Scout")
         topic_scout = st.text_input("Search Latest Literature")
