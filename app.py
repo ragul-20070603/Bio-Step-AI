@@ -5,7 +5,6 @@ import faiss
 import numpy as np
 from PIL import Image
 from sentence_transformers import SentenceTransformer
-from google.api_core import exceptions
 import sqlite3
 import streamlit_authenticator as stauth
 
@@ -14,7 +13,7 @@ import streamlit_authenticator as stauth
 # ==========================================
 st.set_page_config(page_title="Bio-Step AI", page_icon="🧬", layout="wide")
 
-# Initialize Session States
+# Persistent State Management
 defaults = {
     'last_quiz': "", 'last_sim': "", 'last_scout': "", 
     'last_vision': "", 'messages': [], 'index': None, 'chunks': []
@@ -32,18 +31,8 @@ def load_embed_model():
 
 st.session_state.embed_model = load_embed_model()
 
-# --- DATABASE SETUP ---
-def init_db():
-    with sqlite3.connect('biostep_users.db') as conn:
-        c = conn.cursor()
-        c.execute('''CREATE TABLE IF NOT EXISTS users 
-                     (username TEXT PRIMARY KEY, name TEXT, mastery REAL, progress INTEGER)''')
-        conn.commit()
-
-init_db()
-
 # ==========================================
-# 🔑 2. AUTHENTICATION CONFIG
+# 🔑 2. AUTHENTICATION
 # ==========================================
 names = ['Ragul P', 'Reena J', 'Pranathi P K', 'Rohith G']
 usernames = ['ragul', 'reena', 'pranathi', 'rohith']
@@ -54,26 +43,20 @@ authenticator = stauth.Authenticate(
     'biostep_cookie', 'auth_key', cookie_expiry_days=30
 )
 
-# --- RENDER LOGIN ---
 if not st.session_state.get("authentication_status"):
     col1, col2, col3 = st.columns([1, 1.2, 1]) 
     with col2:
         st.write("#")
         st.markdown("<h2 style='text-align: center; color: #818cf8;'>🧬 Bio-Step AI Portal</h2>", unsafe_allow_html=True)
         authenticator.login(location='main')
-        if st.session_state.get("authentication_status") == False:
-            st.error('Username/password is incorrect')
-        elif st.session_state.get("authentication_status") is None:
-            st.info('Please enter your biotech credentials')
     if not st.session_state.get("authentication_status"):
         st.stop() 
 
-# --- USER CONTEXT ---
 name = st.session_state["name"]
 username = st.session_state["username"]
 
 # ==========================================
-# 🎨 3. UI CUSTOMIZATION & SIDEBAR
+# 🎨 3. DESIGNER SIDEBAR (CLEAN VERSION)
 # ==========================================
 with st.sidebar:
     # Profile Card
@@ -92,20 +75,18 @@ with st.sidebar:
     
     st.markdown("---")
 
-    # ONE Knowledge Base Section
+    # Knowledge Base Uploader
     st.subheader("📂 Knowledge Base")
-    st.info("Upload your Biotech PDFs to initialize the engine.")
-    
     file = st.file_uploader("Upload Notes", type="pdf", label_visibility="collapsed")
     
     if file:
-        st.markdown(f"**Ready:** `{file.name}`")
+        st.markdown(f"**Ready to Index:** `{file.name}`")
         if st.button("🚀 Initialize Neural Engine", use_container_width=True):
             with st.spinner("Decoding Bio-Data..."):
-                text = PyPDF2.PdfReader(file)
-                full_text = "\n".join([p.extract_text() for p in text.pages if p.extract_text()])
+                pdf_reader = PyPDF2.PdfReader(file)
+                full_text = "\n".join([p.extract_text() for p in pdf_reader.pages if p.extract_text()])
                 
-                # Build DB
+                # Semantic Chunking & Indexing
                 words = full_text.split()
                 chunks = [" ".join(words[i:i+300]) for i in range(0, len(words), 250)]
                 embeddings = st.session_state.embed_model.encode(chunks)
@@ -114,13 +95,13 @@ with st.sidebar:
                 
                 st.session_state.index = index
                 st.session_state.chunks = chunks
-                st.success("System Ready!")
+                st.success("Knowledge Base Built!")
                 st.balloons()
 
     st.markdown("---")
-    st.markdown(f"""<div style="font-size: 0.8rem; opacity: 0.6; text-align: center;">Version: 3.0.4-Flash</div>""", unsafe_allow_html=True)
+    st.markdown(f"""<div style="font-size: 0.8rem; opacity: 0.6; text-align: center;">V 3.0.4-Flash | Neural: all-MiniLM-L6-v2</div>""", unsafe_allow_html=True)
 
-# Theme Styles
+# Theme CSS
 if theme_choice:
     st.markdown("<style>.stApp { background-color: #fdfdfd; color: #1e293b; }</style>", unsafe_allow_html=True)
 else:
@@ -130,16 +111,22 @@ else:
 # 🛠️ 4. BACKEND UTILITIES
 # ==========================================
 def call_gemini_safe(prompt, is_vision=False, img=None):
+    # Ensure keys are set in your .streamlit/secrets.toml
     api_keys = st.secrets.get("GEMINI_KEYS", [])
-    if not api_keys: return "Error: No API keys in Secrets."
+    if not api_keys: return "Error: API Key Missing. Add GEMINI_KEYS to your secrets."
+    
     for key in api_keys:
         try:
             genai.configure(api_key=key)
             model = genai.GenerativeModel("gemini-1.5-flash")
-            response = model.generate_content([prompt, img]) if is_vision and img else model.generate_content(prompt)
+            if is_vision and img:
+                response = model.generate_content([prompt, img])
+            else:
+                response = model.generate_content(prompt)
             return response.text
-        except Exception: continue
-    return "Error: API Connection Failed."
+        except Exception as e:
+            continue
+    return "Error: Could not connect to Gemini API. Check your internet or keys."
 
 def retrieve(query, top_k=3):
     query_emb = st.session_state.embed_model.encode([query])
@@ -147,13 +134,12 @@ def retrieve(query, top_k=3):
     return [st.session_state.chunks[i] for i in I[0]]
 
 # ==========================================
-# 🚀 5. CORE APP FEATURES
+# 🚀 5. MAIN INTERFACE
 # ==========================================
 if st.session_state.index:
     tabs = st.tabs(["📊 Dashboard", "💬 Tutor", "🧠 Quiz", "📸 Vision", "🧪 Simulation", "📚 Research"])
     
-    # 1. Dashboard
-    with tabs[0]:
+    with tabs[0]: # Dashboard
         st.subheader("Personalized Learning Analytics")
         c1, c2, c3 = st.columns(3)
         c1.metric("Mastery Score", f"{st.session_state.student_stats['mastery']}%")
@@ -161,8 +147,7 @@ if st.session_state.index:
         c3.metric("Path Progress", f"{st.session_state.student_stats['progress']}%")
         st.progress(st.session_state.student_stats['progress'] / 100)
 
-    # 2. Tutor
-    with tabs[1]:
+    with tabs[1]: # Tutor
         st.subheader("Verified Biotech Tutor")
         for msg in st.session_state.messages:
             with st.chat_message(msg["role"]): st.markdown(msg["content"])
@@ -170,49 +155,42 @@ if st.session_state.index:
             st.session_state.messages.append({"role": "user", "content": q})
             with st.chat_message("user"): st.markdown(q)
             context = "\n".join(retrieve(q))
-            with st.status("Verifying..."):
-                ans = call_gemini_safe(f"Explain using context: {q}\nContext: {context}")
+            with st.status("Verifying against Knowledge Base..."):
+                ans = call_gemini_safe(f"Context: {context}\n\nQuestion: {q}\nExplain clearly.")
                 st.session_state.messages.append({"role": "assistant", "content": ans})
                 st.rerun()
 
-    # 3. Quiz
-    with tabs[2]:
+    with tabs[2]: # Quiz
         st.subheader("Adaptive Assessment")
-        if st.button("Generate Quiz"):
+        if st.button("Generate Contextual Quiz"):
             st.session_state.last_quiz = call_gemini_safe(f"Create a 5 MCQ quiz from: {st.session_state.chunks[:3]}")
         if st.session_state.last_quiz:
             st.write(st.session_state.last_quiz)
-            score = st.slider("Score (0-5)", 0, 5, 4)
-            if st.button("Submit Result"):
-                st.session_state.student_stats['quizzes'] += 1
-                st.session_state.student_stats['mastery'] = (score/5)*100
-                st.session_state.student_stats['progress'] = min(100, st.session_state.student_stats['progress'] + 10)
-                st.success("Stats Updated!")
 
-    # 4. Vision
-    with tabs[3]:
+    with tabs[3]: # Vision
         st.subheader("Vision Agent")
         img_file = st.file_uploader("Upload Lab Image", type=['jpg','png','jpeg'])
-        if img_file and st.button("Analyze"):
+        if img_file and st.button("Analyze Image"):
             img = Image.open(img_file)
             st.image(img, use_container_width=True)
-            res = call_gemini_safe("Analyze this biotech image.", is_vision=True, img=img)
+            res = call_gemini_safe("Analyze this biotech image technical findings.", is_vision=True, img=img)
             st.info(res)
 
-    # 5. Simulation
-    with tabs[4]:
+    with tabs[4]: # Simulation
         st.subheader("Protocol Simulator")
-        proto = st.text_input("Experiment Name")
+        proto = st.text_input("Experiment Name", value="Bacterial Growth Kinetics")
         if st.button("Generate Simulation"):
-            res = call_gemini_safe(f"Write Python simulation code for: {proto}")
-            st.code(res, language='python')
+            with st.spinner("Simulating..."):
+                res = call_gemini_safe(f"Write Python code to simulate: {proto}")
+                st.session_state.last_sim = res
+        if st.session_state.last_sim:
+            st.code(st.session_state.last_sim, language='python')
 
-    # 6. Research
-    with tabs[5]:
+    with tabs[5]: # Research
         st.subheader("Research Scout")
-        topic = st.text_input("Topic")
-        if st.button("Scout"):
-            res = call_gemini_safe(f"Find 3 summaries about: {topic}")
+        topic = st.text_input("Search Latest Literature")
+        if st.button("Scout Research"):
+            res = call_gemini_safe(f"Summarize 3 recent breakthroughs in: {topic}")
             st.markdown(res)
 else:
-    st.info("👈 Please upload a document in the sidebar to begin.")
+    st.info("👈 Please upload a PDF in the sidebar to unlock the Neural Engine.")
