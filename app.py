@@ -54,9 +54,8 @@ if not st.session_state.get("authentication_status"):
 def call_gemini(prompt, is_vision=False, img=None):
     # YOUR KEYS - Add as many as you want here
     keys = [
-        "AIzaSyCHfiE1hNG1s1c72KA72KZe0oPF_eQokwE",
+        "AIzaSyD8iSRTZUkQ2fH7hiE25Z-CMuTMuei2-nA",
         "AIzaSyBKzsDQVtaVcuOlHYpmccrpMu-AMsCtKDA",
-        "AIzaSyD__6irN9Wt3uKcXv6vC8HyId0q4JeQTBw",
         "AIzaSyD__6irN9Wt3uKcXv6vC8HyId0q4JeQTBw",
         "AIzaSyC76Do94Ar6h2_KWf3exuiyH87wTyo6YlM",
         "AIzaSyDebtMwQfFNyBH7tT0s93OqZBV1D64VrXY",
@@ -169,3 +168,4 @@ if st.session_state.index:
 
 else:
     st.info("👈 Please upload your PDF in the sidebar and click 'Initialize' to unlock the platform.")
+
